@@ -1,6 +1,6 @@
 EXE_NAME=game.exe
 INCLUDE=include
-SRCS=src/main.cpp 
+SRCS=$(wildcard src/*.cpp)
 CC=g++
 FLAGS = -Wall -Werror
 LFLAGS = -fsanitize=address -fsanitize=leak
