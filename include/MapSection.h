@@ -35,7 +35,7 @@ public:
 	Door getDoorAt(Position pos);
 	Zombie getZombieAt(Position pos);
 	Item getItemAt(Position pos);
-	MapSection(std::string filePath);
+	MapSection(std::string filePath = "");
 
 };
 #endif

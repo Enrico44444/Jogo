@@ -5,7 +5,8 @@
 #include <vector>
 
 #include "Item.h"
-#include "Player.h"
+
+class Player;
 
 class Inventory
 {

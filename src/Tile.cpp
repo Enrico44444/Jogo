@@ -3,4 +3,5 @@
 
 bool Tile::isWalkable()
 {
+	return false;
 }

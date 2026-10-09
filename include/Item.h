@@ -4,7 +4,8 @@
 #include <string>
 
 #include "Position.h"
-#include "Player.h"
+
+class Player;
 
 class Item
 {

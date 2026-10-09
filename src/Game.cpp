@@ -24,6 +24,7 @@ void Game::render()
 
 bool Game::askEnterDoor(Door door)
 {
+	return false;
 }
 
 void Game::changeSection(Door door)

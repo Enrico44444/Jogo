@@ -10,8 +10,6 @@ class Game
 private:
 	Player player;
 	MapSection currentSection;
-	Player player;
-	MapSection mapSection;
 
 public:
 	void start();

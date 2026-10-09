@@ -3,7 +3,8 @@
 
 #include "Position.h"
 #include "MoveResult.h"
-#include "MapSection.h"
+
+class MapSection;
 
 class Character
 {
