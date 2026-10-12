@@ -6,13 +6,16 @@
 #include "Item.h"
 #include "Player.h"
 
+// Chave: abre a porta trancada que exige o mesmo id.
 class KeyItem : public Item
 {
 private:
-	std::string keyId;
+	std::string keyId;   // Identificador da chave
 
 public:
-	void use(Player player);
+	KeyItem(Position pos, std::string keyId);
+	void use(Player player) override;   // Ainda não implementada
+	char symbol() const override;   // Desenhada como K
 
 };
 

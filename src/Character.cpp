@@ -2,7 +2,7 @@
 #include "MapSection.h"
 
 
-MoveResult Character::move(char direction, MapSection section)
+MoveResult Character::move(char direction, MapSection& section)
 {
 	return MoveResult::BLOCKED;
 }

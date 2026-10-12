@@ -16,7 +16,7 @@ protected:
 	Position pos;
 
 public:
-	MoveResult move(char direction, MapSection section);
+	MoveResult move(char direction, MapSection& section);
 	void takeDamage(float amount);
 	bool isAlive();
 

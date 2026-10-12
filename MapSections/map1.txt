@@ -1,0 +1,13 @@
+10 6
+##########
+#........D
+#........#
+#..H.A...#
+#....K...#
+##########
+PLAYER 1 1
+ZOMBIE 6 1
+DOOR 9 1 maps/sala2.txt 1 2 chave1
+HEAL 3 3 25
+AMMO 5 3 PISTOL 12
+KEY 5 4 chave1

@@ -5,16 +5,20 @@
 #include "Position.h"
 #include "Player.h"
 
+// Inimigo que fica em uma sala, persegue e ataca o jogador.
 class Zombie : public Character
 {
 private:
 	float damage;
-	Position startPos;
+	Position startPos;   // Posição inicial, para onde volta quando a sala é recarregada
 
 public:
-	void update(Player target);
-	void attack(Player target);
-	void resetPosition();
+	Zombie();   // Zumbi com vida e dano provisórios
+	Zombie(Position pos);   // Zumbi que nasce na posição dada
+
+	void update(Player target);   // Ainda não implementada
+	void attack(Player target);   // Ainda não implementada
+	void resetPosition();   // Ainda não implementada
 
 };
 

@@ -5,6 +5,9 @@
 
 class Floor : public Tile
 {
+public:
+	Floor(Position pos) : Tile(pos, true) {}
+	char symbol() const override { return '.'; }   // Desenhado como ponto
 };
 
 #endif
