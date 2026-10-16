@@ -298,6 +298,40 @@ void MapSection::update(Player player)
 
 void MapSection::render()
 {
+// Cria um vetor de char do tamanho do mapa, ele será preenchido com as tiles e itens
+std::vector<char> map_print(mapX * mapY);
+// Coloca o player em sua posição inicial no vetor
+int x = playerStart.getX();
+int y = playerStart.getY();
+map_print[mapX * y + x] = 'P';
+
+// Coloca os itens em suas posições no vetor
+for (std::unique_ptr<Item> &i : items){
+	Position pos = i->getPos();
+	x = pos.getX();
+	y = pos.getY();
+	map_print[mapX * y + x] = i->symbol();
+}
+
+int cont = 0;
+// Coloca os tiles em suas posições no vetor
+for (std::unique_ptr<Tile> &i : tiles){
+	if (!map_print[cont])
+		map_print[cont] = i->symbol();
+	cont++;
+}
+
+cont = 0;
+// Imprime o mapa
+for (char i : map_print){
+	if (cont == mapX){
+		std::cout << "\n";
+		cont = 0;
+	}
+	std::cout << i << ' ';
+	cont++;
+}
+	
 }
 
 void MapSection::resetZombies()

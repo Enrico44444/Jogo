@@ -18,3 +18,7 @@ char Item::symbol() const
 {
 	return '?';
 }
+
+Position Item::getPos() const{
+    return pos;
+}

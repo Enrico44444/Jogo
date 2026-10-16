@@ -22,7 +22,7 @@ public:
 	virtual void use(Player player);   // Efeito de usar o item; cada subclasse redefine
 	void addAmount(int n);   // Ainda não implementada
 	void removeAmount(int n);   // Ainda não implementada
-	Position getPos() const;   // Ainda não implementada
+	Position getPos() const;
 	virtual char symbol() const;   // Caractere usado para desenhar o item; cada subclasse redefine
 
 };

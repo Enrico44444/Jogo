@@ -28,7 +28,7 @@ private:
 public:
 	bool loadFromFile(std::string path);   // Lê o arquivo da sala; devolve false se houver erro
 	void update(Player player);   // Ainda não implementado
-	void render();   // Ainda não implementado
+	void render();
 	void resetZombies();   // Ainda não implementado
 	Tile getTileAt(Position pos);   // Ainda não implementado
 	bool isWalkable(Position pos);   // Ainda não implementado
