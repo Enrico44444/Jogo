@@ -28,9 +28,11 @@ private:
 public:
 	bool loadFromFile(std::string path);   // Lê o arquivo da sala; devolve false se houver erro
 	void update(Player player);   // Ainda não implementado
-	void render();
+	int getMapX() const;
+	int getMapY() const;
+	void render(); // Imprime o mapa pela primeira vez
 	void resetZombies();   // Ainda não implementado
-	Tile getTileAt(Position pos);   // Ainda não implementado
+	Tile* getTileAt(Position pos);   // Tile da posição dada, ou nullptr se estiver fora da sala
 	bool isWalkable(Position pos);   // Ainda não implementado
 	Door getDoorAt(Position pos);   // Ainda não implementado
 	Zombie getZombieAt(Position pos);   // Ainda não implementado

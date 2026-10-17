@@ -1,5 +1,6 @@
 #include "Player.h"
 
+Player::Player(Position pos) : Character(pos) {}
 
 float Player::shoot()
 {

@@ -13,6 +13,7 @@ private:
 	Weapon weapon;
 
 public:
+	Player(Position pos);
 	float shoot();
 	void heal(float amount);
 	bool pickUpItem(Item item);

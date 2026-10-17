@@ -334,13 +334,28 @@ for (char i : map_print){
 	
 }
 
+int MapSection::getMapX() const {
+	return mapX;
+}
+
+int MapSection::getMapY() const {
+	return mapY;
+}
+
 void MapSection::resetZombies()
 {
 }
 
-Tile MapSection::getTileAt(Position pos)
+// Devolve o tile da posição dada
+Tile* MapSection::getTileAt(Position pos)
 {
-	return Tile();
+	int x = pos.getX();
+	int y = pos.getY();
+	if (x < 0 || x >= mapX || y < 0 || y >= mapY)
+	{
+		return nullptr;
+	}
+	return tiles[y * mapX + x].get();
 }
 
 bool MapSection::isWalkable(Position pos)

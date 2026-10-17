@@ -6,6 +6,12 @@ Tile::Tile() : pos(), walkable(false) {}
 // Tile na posição dada, andável ou não
 Tile::Tile(Position pos, bool walkable) : pos(pos), walkable(walkable) {}
 
+// Diz se o personagem pode pisar neste tile
+bool Tile::isWalkable() const
+{
+	return walkable;
+}
+
 // Símbolo padrão; as subclasses devolvem o seu ('.', '#', 'D')
 char Tile::symbol() const
 {

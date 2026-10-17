@@ -2,8 +2,19 @@
 
 #include "Game.h"
 
+Game::Game() : player(Position())
+{
+}
+
 void Game::start()
 {
+	if (!currentSection.loadFromFile("MapSections/map1.txt"))
+	{
+		return;
+	}
+
+	player = Player(currentSection.getPlayerStart());
+	currentSection.render();
 }
 
 void Game::gameLoop()

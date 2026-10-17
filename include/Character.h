@@ -8,14 +8,12 @@ class MapSection;
 
 class Character
 {
-private:
-	Position position;
-
 protected:
 	float life;
 	Position pos;
 
 public:
+	Character(Position pos);
 	MoveResult move(char direction, MapSection& section);
 	void takeDamage(float amount);
 	bool isAlive();

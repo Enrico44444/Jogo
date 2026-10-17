@@ -12,6 +12,7 @@ private:
 	MapSection currentSection;
 
 public:
+	Game();
 	void start();
 	void gameLoop();
 	void processInput();
