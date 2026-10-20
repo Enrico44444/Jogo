@@ -10,6 +10,7 @@ class Game
 private:
 	Player player;
 	MapSection currentSection;
+	bool running;   // Enquanto for true, o loop continua
 
 public:
 	Game();

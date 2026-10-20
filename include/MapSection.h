@@ -24,13 +24,16 @@ private:
 	std::vector<std::unique_ptr<Item>> items;   // Itens no chão
 	std::vector<Door*> doors;                   // Portas ficam em tiles, mas também aqui para facilitar a busca
 	Position playerStart;   // Onde o jogador começa nesta sala
+	std::vector<char> lastFrame;   // Último desenho feito na tela, o update compara com ele
+	std::vector<char> buildFrame(Position playerPos) const;   // Monta o desenho do mapa, mas não imprime
+	void draw(Position playerPos);   // Limpa a tela e imprime o mapa inteiro
 
 public:
 	bool loadFromFile(std::string path);   // Lê o arquivo da sala; devolve false se houver erro
-	void update(Player player);   // Ainda não implementado
+	void update(const Player& player);   // Redesenha só as células que mudaram desde o último desenho
 	int getMapX() const;
 	int getMapY() const;
-	void render(); // Imprime o mapa pela primeira vez
+	void render();   // Imprime o mapa inteiro pela primeira vez (limpa a tela antes)
 	void resetZombies();   // Ainda não implementado
 	Tile* getTileAt(Position pos);   // Tile da posição dada, ou nullptr se estiver fora da sala
 	bool isWalkable(Position pos);   // Ainda não implementado

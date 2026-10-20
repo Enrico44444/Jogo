@@ -17,6 +17,7 @@ public:
 	MoveResult move(char direction, MapSection& section);
 	void takeDamage(float amount);
 	bool isAlive();
+	Position getPos() const { return pos; }
 
 };
 

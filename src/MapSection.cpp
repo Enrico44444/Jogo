@@ -289,49 +289,106 @@ bool MapSection::loadFromFile(std::string path)
 	zombies = std::move(newZombies);
 	items = std::move(newItems);
 	playerStart = newStart;
+	lastFrame.clear();                  // a tela mostra outra sala: o próximo update desenha tudo de novo
 	return true;
 }
 
-void MapSection::update(Player player)
+// Monta o desenho do mapa:
+// Cada "camada" sobrescreve a anterior, então a última a ser escrita aparece por cima:
+// Ordem: tiles < itens < zumbis < jogador
+std::vector<char> MapSection::buildFrame(Position playerPos) const
 {
+	std::vector<char> frame(mapX * mapY, ' ');
+
+	// Camada 1: terreno (piso, parede, porta)
+	for (std::size_t i = 0; i < tiles.size(); i++)
+	{
+		frame[i] = tiles[i]->symbol();
+	}
+
+	// Camada 2: itens
+	for (const std::unique_ptr<Item>& item : items)
+	{
+		Position p = item->getPos();
+		frame[p.getY() * mapX + p.getX()] = item->symbol();
+	}
+
+	// Camada 3: zumbis
+	for (const Zombie& zombie : zombies)
+	{
+		Position p = zombie.getPos();
+		frame[p.getY() * mapX + p.getX()] = 'Z';
+	}
+
+	// Camada 4: jogador
+	if (playerPos.getX() >= 0 && playerPos.getX() < mapX && playerPos.getY() >= 0 && playerPos.getY() < mapY)
+	{
+		frame[playerPos.getY() * mapX + playerPos.getX()] = 'P';
+	}
+
+	return frame;
 }
 
+// Limpa a tela e imprime o mapa inteiro. Guarda o desenho em lastFrame.
+// Depois da limpeza o mapa começa na linha 1, coluna 1 da tela, e é isso que permite ao update
+// escrever em uma célula específica sem imprimir o mapa de novo.
+void MapSection::draw(Position playerPos)
+{
+	if (tiles.empty())
+	{
+		return;
+	}
+
+	lastFrame = buildFrame(playerPos);
+
+	std::cout << "\033[2J\033[H";   // Escape code para limpar a tela e levar o cursor para o canto superior esquerdo
+	for (int y = 0; y < mapY; y++)
+	{
+		for (int x = 0; x < mapX; x++)
+		{
+			std::cout << lastFrame[y * mapX + x] << ' ';   // Cada célula ocupa 2 colunas: o símbolo e um espaço
+		}
+		std::cout << '\n';
+	}
+	std::cout << std::flush;
+}
+
+// Imprime o mapa inteiro, com o jogador na posição inicial da sala
 void MapSection::render()
 {
-// Cria um vetor de char do tamanho do mapa, ele será preenchido com as tiles e itens
-std::vector<char> map_print(mapX * mapY);
-// Coloca o player em sua posição inicial no vetor
-int x = playerStart.getX();
-int y = playerStart.getY();
-map_print[mapX * y + x] = 'P';
-
-// Coloca os itens em suas posições no vetor
-for (std::unique_ptr<Item> &i : items){
-	Position pos = i->getPos();
-	x = pos.getX();
-	y = pos.getY();
-	map_print[mapX * y + x] = i->symbol();
+	draw(playerStart);
 }
 
-int cont = 0;
-// Coloca os tiles em suas posições no vetor
-for (std::unique_ptr<Tile> &i : tiles){
-	if (!map_print[cont])
-		map_print[cont] = i->symbol();
-	cont++;
-}
-
-cont = 0;
-// Imprime o mapa
-for (char i : map_print){
-	if (cont == mapX){
-		std::cout << "\n";
-		cont = 0;
+// Atualiza o desenho depois de uma mudança.
+// Monta o desenho novo, compara com o último e reescreve só as células que mudaram.
+void MapSection::update(const Player& player)
+{
+	// Nada desenhado ainda, ou a sala foi recarregada: desenha tudo
+	if (lastFrame.size() != tiles.size())
+	{
+		draw(player.getPos());
+		return;
 	}
-	std::cout << i << ' ';
-	cont++;
-}
-	
+
+	std::vector<char> frame = buildFrame(player.getPos());
+
+	for (int y = 0; y < mapY; y++)
+	{
+		for (int x = 0; x < mapX; x++)
+		{
+			int i = y * mapX + x;
+			if (frame[i] != lastFrame[i])
+			{
+				// \033[linha;colunaH move o cursor para a célula que foi alterada.
+				// A tela conta a partir de 1, e cada célula ocupa 2 colunas
+				std::cout << "\033[" << y + 1 << ";" << 2 * x + 1 << "H" << frame[i];
+			}
+		}
+	}
+	lastFrame = frame;
+
+	// Deixa o cursor logo abaixo do mapa, onde o resto do jogo pode escrever
+	std::cout << "\033[" << mapY + 1 << ";1H" << std::flush;
 }
 
 int MapSection::getMapX() const {
