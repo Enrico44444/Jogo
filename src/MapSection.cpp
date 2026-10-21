@@ -420,9 +420,11 @@ bool MapSection::isWalkable(Position pos)
 	return false;
 }
 
-Door MapSection::getDoorAt(Position pos)
+// Devolve a porta da posição dada
+Door* MapSection::getDoorAt(Position pos)
 {
-	return Door();
+	// dynamic_cast devolve nullptr se o tile não for uma Door (e também se getTileAt devolver nullptr)
+	return dynamic_cast<Door*>(getTileAt(pos));
 }
 
 Zombie MapSection::getZombieAt(Position pos)

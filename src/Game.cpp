@@ -54,9 +54,20 @@ void Game::processInput()
 		case 'a': case 'A':
 		case 's': case 'S':
 		case 'd': case 'D':
-			// Os resultados do movimento ainda não são usados
-			player.move(tecla, currentSection);
+		{
+			MoveResult resultado = player.move(tecla, currentSection);
+
+			// Há uma porta à frente: acha a porta, pergunta e, se o jogador quiser, troca de sala
+			if (resultado == MoveResult::DOOR)
+			{
+				Door* door = currentSection.getDoorAt(player.getPos().nextPos(tecla));
+				if (door != nullptr && askEnterDoor(*door))
+				{
+					changeSection(*door);
+				}
+			}
 			break;
+		}
 		case 'q': case 'Q':
 			running = false;
 			break;
@@ -75,11 +86,48 @@ void Game::render()
 {
 }
 
+// Pergunta se o jogador quer atravessar a porta. Devolve true se a resposta for sim
 bool Game::askEnterDoor(Door door)
 {
-	return false;
+	char resposta;
+
+	// A pergunta fica sempre na linha logo abaixo do aviso das teclas (mapY + 1)
+	int linha = currentSection.getMapY() + 2;
+
+	// \033[linha;1H leva o cursor para o início dessa linha e \033[2K apaga o que houver nela
+	std::cout << "\033[" << linha << ";1H\033[2K" << "Entrar em " << door.getTargetFile() << "? (s/n): " << std::flush;
+
+	// Fim da entrada, encerra o jogo
+	if (!(std::cin >> resposta))
+	{
+		running = false;
+		return false;
+	}
+
+	// Apaga a pergunta, para ela não ficar na tela depois de respondida
+	std::cout << "\033[" << linha << ";1H\033[2K" << std::flush;
+
+	return resposta == 's' || resposta == 'S';
 }
 
+// Troca a sala atual pela sala de destino da porta e coloca o jogador onde a porta indica.
 void Game::changeSection(Door door)
 {
+	// Se o arquivo de destino tiver erro, o loadFromFile devolve false
+	// e a sala atual continua exatamente como estava
+	if (!currentSection.loadFromFile(door.getTargetFile()))
+	{
+		return;
+	}
+
+	// Só a posição muda
+	// Se a posição de chegada da porta não for um piso, usa a posição inicial da nova sala
+	Position destino = door.getTargetPos();
+	Tile* tile = currentSection.getTileAt(destino);
+	if (tile == nullptr || !tile->isWalkable())
+	{
+		destino = currentSection.getPlayerStart();
+	}
+	player.setPos(destino);
+
 }

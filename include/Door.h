@@ -29,6 +29,8 @@ public:
 	bool unlock(KeyItem key);   // Ainda não implementada
 	bool use(Player player);   // Ainda não implementada
 
+	std::string getTargetFile() const { return targetFile; }   // Arquivo da sala de destino
+	Position getTargetPos() const { return targetPos; }   // Onde o jogador aparece na sala de destino
 	char symbol() const override { return 'D'; }   // Desenhada como D
 
 };

@@ -37,7 +37,7 @@ public:
 	void resetZombies();   // Ainda não implementado
 	Tile* getTileAt(Position pos);   // Tile da posição dada, ou nullptr se estiver fora da sala
 	bool isWalkable(Position pos);   // Ainda não implementado
-	Door getDoorAt(Position pos);   // Ainda não implementado
+	Door* getDoorAt(Position pos);   // Porta da posição dada, ou nullptr se não houver porta ali
 	Zombie getZombieAt(Position pos);   // Ainda não implementado
 	Item getItemAt(Position pos);   // Ainda não implementado
 	MapSection(std::string filePath = "");   // Se receber um caminho, já carrega a sala

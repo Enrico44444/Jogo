@@ -1,0 +1,10 @@
+8 5
+########
+#......#
+D......#
+#......#
+########
+PLAYER 1 2
+ZOMBIE 4 1
+ZOMBIE 5 3
+DOOR 0 2 MapSections/map1.txt 8 1
