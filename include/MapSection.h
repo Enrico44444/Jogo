@@ -24,6 +24,7 @@ private:
 	std::vector<std::unique_ptr<Item>> items;   // Itens no chão
 	std::vector<Door*> doors;                   // Portas ficam em tiles, mas também aqui para facilitar a busca
 	Position playerStart;   // Onde o jogador começa nesta sala
+	std::string currentPath;   // Arquivo .txt de onde a sala foi carregada
 	std::vector<char> lastFrame;   // Último desenho feito na tela, o update compara com ele
 	std::vector<char> buildFrame(Position playerPos) const;   // Monta o desenho do mapa, mas não imprime
 	void draw(Position playerPos);   // Limpa a tela e imprime o mapa inteiro
@@ -39,7 +40,9 @@ public:
 	bool isWalkable(Position pos);   // Ainda não implementado
 	Door* getDoorAt(Position pos);   // Porta da posição dada, ou nullptr se não houver porta ali
 	Zombie getZombieAt(Position pos);   // Ainda não implementado
-	Item getItemAt(Position pos);   // Ainda não implementado
+	Item* getItemAt(Position pos);   // Item do chão na posição dada, ou nullptr se não houver
+	std::unique_ptr<Item> takeItemAt(Position pos);   // Tira o item da sala e o entrega a quem chamou (nullptr se não houver)
+	bool removeItemFromFile(Position pos);   // Apaga do arquivo .txt da sala o item dessa posição, para ele não voltar ao recarregar
 	MapSection(std::string filePath = "");   // Se receber um caminho, já carrega a sala
 
 	Position getPlayerStart() const { return playerStart; }   // Onde o jogador começa nesta sala

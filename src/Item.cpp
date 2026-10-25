@@ -22,3 +22,19 @@ char Item::symbol() const
 Position Item::getPos() const{
     return pos;
 }
+
+// Soma n à quantidade
+void Item::addAmount(int n)
+{
+	amount += n;
+}
+
+// Tira n da quantidade, sem deixar ficar negativa
+void Item::removeAmount(int n)
+{
+	amount -= n;
+	if (amount < 0)
+	{
+		amount = 0;
+	}
+}

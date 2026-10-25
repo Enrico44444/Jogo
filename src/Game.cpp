@@ -15,6 +15,7 @@ void Game::start()
 
 	player = Player(currentSection.getPlayerStart());
 	currentSection.render();
+	render();   // Mostra o inventário (ainda vazio)
 
 	// Entra no loop do jogo e só volta quando o jogador sair
 	running = true;
@@ -28,9 +29,12 @@ void Game::gameLoop()
 	{
 		processInput();
 		update();
+		render();
 	}
 
-	std::cout << std::endl;
+	// Deixa o cursor abaixo do inventário, para o terminal não escrever por cima da tela do jogo
+	int ultimaLinha = currentSection.getMapY() + 3 + static_cast<int>(player.getInventory().getItems().size());
+	std::cout << "\033[" << ultimaLinha + 1 << ";1H" << std::endl;
 }
 
 // Lê uma tecla do jogador e repassa para a função certa.
@@ -38,6 +42,9 @@ void Game::gameLoop()
 void Game::processInput()
 {
 	char tecla;
+
+	// A mensagem da jogada anterior sai de cena (o render a apaga da tela)
+	message.clear();
 
 	// Apaga a linha (o que foi digitado na jogada anterior) e pede a tecla
 	std::cout << "\033[2K" << "Mover (w/a/s/d + Enter), q para sair: " << std::flush;
@@ -57,8 +64,13 @@ void Game::processInput()
 		{
 			MoveResult resultado = player.move(tecla, currentSection);
 
+			// Andou: se há um item no chão ali, tenta pegar
+			if (resultado == MoveResult::MOVED)
+			{
+				pickUpItemHere();
+			}
 			// Há uma porta à frente: acha a porta, pergunta e, se o jogador quiser, troca de sala
-			if (resultado == MoveResult::DOOR)
+			else if (resultado == MoveResult::DOOR)
 			{
 				Door* door = currentSection.getDoorAt(player.getPos().nextPos(tecla));
 				if (door != nullptr && askEnterDoor(*door))
@@ -82,8 +94,29 @@ void Game::update()
 	currentSection.update(player);
 }
 
+// Mostra abaixo do mapa a mensagem e o inventário.
+// Linhas (contando a partir do mapa, que tem mapY linhas): mapY + 1 = aviso das teclas,
+// mapY + 2 = mensagem (ou a pergunta da porta), mapY + 3 em diante = inventário
 void Game::render()
 {
+	int linhaMensagem = currentSection.getMapY() + 2;
+
+	// Mensagem: apaga a linha e escreve a atual (fica em branco quando não há nenhuma)
+	std::cout << "\033[" << linhaMensagem << ";1H\033[2K" << message;
+
+	// Inventário: apaga da linha seguinte até o fim da tela e escreve de novo, um item por linha
+	const Inventory& inventory = player.getInventory();
+	int linha = linhaMensagem + 1;
+	std::cout << "\033[" << linha << ";1H\033[J";
+	std::cout << "Inventario (" << inventory.getItems().size() << "/" << inventory.getMaxSize() << "):";
+	for (const std::unique_ptr<Item>& item : inventory.getItems())
+	{
+		linha++;
+		std::cout << "\033[" << linha << ";1H  " << item->getName() << " x" << item->getAmount();
+	}
+
+	// Devolve o cursor para a linha do aviso das teclas
+	std::cout << "\033[" << linhaMensagem - 1 << ";1H" << std::flush;
 }
 
 // Pergunta se o jogador quer atravessar a porta. Devolve true se a resposta for sim
@@ -130,4 +163,31 @@ void Game::changeSection(Door door)
 	}
 	player.setPos(destino);
 
+}
+
+// Se há um item no chão onde o jogador está, tenta guardá-lo no inventário
+void Game::pickUpItemHere()
+{
+	Position pos = player.getPos();
+	Item* item = currentSection.getItemAt(pos);
+	if (item == nullptr)
+	{
+		return;
+	}
+
+	// Inventário cheio (e sem pilha desse item): o item continua no chão
+	if (!player.canPickUp(*item))
+	{
+		message = "Inventario cheio: nao deu para pegar " + item->getName();
+		return;
+	}
+
+	message = "Pegou: " + item->getName();
+	player.pickUpItem(currentSection.takeItemAt(pos));
+
+	// Apaga o item do arquivo da sala, para ele não voltar quando a sala for carregada de novo
+	if (!currentSection.removeItemFromFile(pos))
+	{
+		message += " (aviso: nao foi possivel atualizar o arquivo da sala)";
+	}
 }

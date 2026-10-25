@@ -16,7 +16,9 @@ public:
 	Player(Position pos);
 	float shoot();
 	void heal(float amount);
-	bool pickUpItem(Item item);
+	bool canPickUp(const Item& item) const;   // Verifica se o inventário tem espaço para o item
+	bool pickUpItem(std::unique_ptr<Item> item);   // Guarda o item no inventário (chame canPickUp antes)
+	const Inventory& getInventory() const { return inventory; }   // Para mostrar o inventário na tela
 
 };
 #endif

@@ -289,6 +289,7 @@ bool MapSection::loadFromFile(std::string path)
 	zombies = std::move(newZombies);
 	items = std::move(newItems);
 	playerStart = newStart;
+	currentPath = path;                 // guarda de qual arquivo a sala veio (o removeItemFromFile edita esse arquivo)
 	lastFrame.clear();                  // a tela mostra outra sala: o próximo update desenha tudo de novo
 	return true;
 }
@@ -432,9 +433,134 @@ Zombie MapSection::getZombieAt(Position pos)
 	return Zombie();
 }
 
-Item MapSection::getItemAt(Position pos)
+// Devolve o item do chão na posição dada (sem passar a posse), ou nullptr se não houver
+Item* MapSection::getItemAt(Position pos)
 {
-	return Item();
+	for (const std::unique_ptr<Item>& item : items)
+	{
+		if (item->getPos().equals(pos))
+		{
+			return item.get();
+		}
+	}
+	return nullptr;
+}
+
+// Tira o item da sala e entrega a posse a quem chamou (que normalmente o guarda no inventário).
+// Devolve nullptr se não houver item na posição.
+std::unique_ptr<Item> MapSection::takeItemAt(Position pos)
+{
+	for (std::size_t i = 0; i < items.size(); i++)
+	{
+		if (items[i]->getPos().equals(pos))
+		{
+			std::unique_ptr<Item> pego = std::move(items[i]);   // a posse sai da lista
+			items.erase(items.begin() + i);                     // e a vaga vazia é removida
+			return pego;
+		}
+	}
+	return nullptr;
+}
+
+// Apaga do arquivo .txt desta sala o item que estava na posição dada:
+// o símbolo que era de item vira piso e a linha que descreve o item é removida.
+// Assim o item não volta quando a sala for carregada de novo.
+// Devolve false se não conseguir.
+bool MapSection::removeItemFromFile(Position pos)
+{
+	// Lê o arquivo inteiro
+	std::ifstream in(currentPath);
+	if (!in.is_open())
+	{
+		return false;
+	}
+	std::stringstream conteudo;
+	// rdbuf pega o conteúdo inteiro e coloca em uma linha.
+	conteudo << in.rdbuf();
+	in.close();
+
+	// Separa em linhas. Se a linha terminava em \n, o \n continua no fim dela
+	std::vector<std::string> lines;
+	std::string texto = conteudo.str();
+	std::size_t inicio = 0;
+	while (true)
+	{
+		std::size_t fim = texto.find('\n', inicio);
+		if (fim == std::string::npos) // npos é o que find devolve caso não encontre o caractere inserido no parâmetro
+		{
+			lines.push_back(texto.substr(inicio));   // última linha (vazia se o arquivo terminava em \n)
+			break;
+		}
+		lines.push_back(texto.substr(inicio, fim - inicio));
+		inicio = fim + 1;
+	}
+
+	// A primeira linha tem "largura altura"; as h linhas seguintes são a grade
+	int w = 0, h = 0;
+	std::istringstream tamanho(lines[0]);
+	if (!(tamanho >> w >> h))
+	{
+		return false;
+	}
+
+	int x = pos.getX();
+	int y = pos.getY();
+	if (x < 0 || x >= w || y < 0 || y >= h || static_cast<int>(lines.size()) < h + 1)
+	{
+		return false;
+	}
+
+	// O símbolo da grade nessa posição precisa ser o de um item
+	std::string& linhaGrade = lines[1 + y];
+	if (static_cast<int>(linhaGrade.size()) < w)
+	{
+		return false;
+	}
+	char simbolo = linhaGrade[x];
+	if (simbolo != 'H' && simbolo != 'A' && simbolo != 'K')
+	{
+		return false;
+	}
+	std::string etiqueta = (simbolo == 'H') ? "HEAL" : (simbolo == 'A') ? "AMMO" : "KEY";
+
+	// Procura, depois da grade, a linha desse item (etiqueta e posição iguais)
+	int alvo = -1;
+	for (std::size_t i = h + 1; i < lines.size(); i++)
+	{
+		std::istringstream ls(lines[i]);
+		std::string tag;
+		int lx = -1, ly = -1;
+		if (ls >> tag >> lx >> ly && tag == etiqueta && lx == x && ly == y)
+		{
+			alvo = static_cast<int>(i);
+			break;
+		}
+	}
+	if (alvo == -1)
+	{
+		return false;
+	}
+
+	// Só altera depois de achar tudo: o símbolo vira piso e a linha do item sai
+	linhaGrade[x] = '.';
+	lines.erase(lines.begin() + alvo);
+
+	// Grava o arquivo de volta
+	std::ofstream out(currentPath);
+	if (!out.is_open())
+	{
+		return false;
+	}
+	for (std::size_t i = 0; i < lines.size(); i++)
+	{
+		if (i > 0)
+		{
+			out << '\n';
+		}
+		out << lines[i];
+	}
+	// good só retorna true caso não haja erros.
+	return out.good();
 }
 
 // Sem argumento, cria uma sala vazia; com um caminho, já carrega a sala desse arquivo
