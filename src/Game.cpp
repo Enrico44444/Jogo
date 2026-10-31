@@ -72,8 +72,9 @@ void Game::processInput()
 			// Há uma porta à frente: acha a porta, pergunta e, se o jogador quiser, troca de sala
 			else if (resultado == MoveResult::DOOR)
 			{
-				Door* door = currentSection.getDoorAt(player.getPos().nextPos(tecla));
-				if (door != nullptr && askEnterDoor(*door))
+				Position posPorta = player.getPos().nextPos(tecla);
+				Door* door = currentSection.getDoorAt(posPorta);
+				if (door != nullptr && unlockDoor(*door, posPorta) && askEnterDoor(*door))
 				{
 					changeSection(*door);
 				}
@@ -188,6 +189,37 @@ void Game::pickUpItemHere()
 	// Apaga o item do arquivo da sala, para ele não voltar quando a sala for carregada de novo
 	if (!currentSection.removeItemFromFile(pos))
 	{
-		message += " (aviso: nao foi possivel atualizar o arquivo da sala)";
+		message += " (aviso: arquivo nao atualizado)";
 	}
+}
+
+// Garante que a porta pode ser atravessada. Devolve true se ela está (ou ficou) destrancada.
+// Se estiver trancada, usa a chave do inventário: a chave é consumida e a porta fica destrancada
+// também no arquivo da sala. Sem a chave, mostra a mensagem e devolve false.
+bool Game::unlockDoor(Door& door, Position pos)
+{
+	if (!door.isLocked())
+	{
+		return true;
+	}
+
+	// Verifica se 0 jogador tem a chave que essa porta exige
+	const KeyItem* key = player.findKey(door.getRequiredKey());
+	if (key == nullptr)
+	{
+		message = "Porta trancada: precisa da chave " + door.getRequiredKey();
+		return false;
+	}
+
+	// Destranca com a chave. A mensagem é montada antes de consumir a chave (o item some do inventário)
+	door.unlock(*key);
+	message = "Usou a chave " + door.getRequiredKey() + ": porta destrancada";
+	player.useKey(door.getRequiredKey());
+
+	// Apaga a chave da linha DOOR do arquivo, para a porta continuar aberta quando a sala for recarregada
+	if (!currentSection.unlockDoorInFile(pos))
+	{
+		message += " (aviso: arquivo nao atualizado)";
+	}
+	return true;
 }

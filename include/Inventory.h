@@ -7,7 +7,9 @@
 
 #include "Item.h"
 
+//	Para não ter que incluir os .h
 class Player;
+class KeyItem;
 
 // Inventário do jogador. Itens com o mesmo nome ficam empilhados em uma única vaga.
 class Inventory
@@ -24,6 +26,8 @@ public:
 	bool removeItem(std::string name);   // Tira uma unidade do item com esse nome
 	bool isFull() const;   // Verifica se o inventário está cheio
 	bool hasItem(std::string name) const;   // Verifica se tem um item específico
+	const KeyItem* findKey(const std::string& keyId) const;   // Procura uma chave pelo id; nullptr se não tiver
+	bool removeKey(const std::string& keyId);   // Consome uma unidade da chave com esse id
 	bool useItem(std::string name, Player player);   // Ainda não implementada
 
 	const std::vector<std::unique_ptr<Item>>& getItems() const { return items; }   // Para mostrar o inventário na tela

@@ -25,10 +25,11 @@ public:
 	// Define o destino e a chave da porta (chamado pelo loadFromFile)
 	void configure(std::string targetFile, Position targetPos, std::string requiredKey);
 
-	bool isLocked();   // Ainda não implementada
-	bool unlock(KeyItem key);   // Ainda não implementada
+	bool isLocked() const;   // Está trancada?
+	bool unlock(const KeyItem& key);   // Destranca se a chave tiver o id exigido, devolve true se destrancou
 	bool use(Player player);   // Ainda não implementada
 
+	std::string getRequiredKey() const { return requiredKey; }   // Id da chave que a abre (vazio = sem chave)
 	std::string getTargetFile() const { return targetFile; }   // Arquivo da sala de destino
 	Position getTargetPos() const { return targetPos; }   // Onde o jogador aparece na sala de destino
 	char symbol() const override { return 'D'; }   // Desenhada como D

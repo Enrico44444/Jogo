@@ -18,6 +18,8 @@ public:
 	void heal(float amount);
 	bool canPickUp(const Item& item) const;   // Verifica se o inventário tem espaço para o item
 	bool pickUpItem(std::unique_ptr<Item> item);   // Guarda o item no inventário (chame canPickUp antes)
+	const KeyItem* findKey(const std::string& keyId) const;   // Chave com esse id no inventário, ou nullptr
+	bool useKey(const std::string& keyId);   // Consome uma chave com esse id
 	const Inventory& getInventory() const { return inventory; }   // Para mostrar o inventário na tela
 
 };

@@ -563,6 +563,120 @@ bool MapSection::removeItemFromFile(Position pos)
 	return out.good();
 }
 
+// Deixa a porta dessa posição destrancada no arquivo .txt da sala: apaga a chave da linha DOOR
+// ("DOOR x y arquivo tx ty chave" vira "DOOR x y arquivo tx ty").
+// Assim a porta continua aberta quando a sala for carregada de novo.
+// Devolve false se não conseguir.
+bool MapSection::unlockDoorInFile(Position pos)
+{
+	// Lê o arquivo inteiro
+	std::ifstream in(currentPath);
+	if (!in.is_open())
+	{
+		return false;
+	}
+	std::stringstream conteudo;
+	conteudo << in.rdbuf();
+	in.close();
+
+	// Separa em linhas
+	std::vector<std::string> lines;
+	std::string texto = conteudo.str();
+	std::size_t inicio = 0;
+	while (true)
+	{
+		std::size_t fim = texto.find('\n', inicio);
+		if (fim == std::string::npos)
+		{
+			lines.push_back(texto.substr(inicio));
+			break;
+		}
+		lines.push_back(texto.substr(inicio, fim - inicio));
+		inicio = fim + 1; 
+	}
+
+	// A primeira linha tem "largura altura"; as h linhas seguintes são a grade
+	int w = 0, h = 0;
+	std::istringstream tamanho(lines[0]);
+	if (!(tamanho >> w >> h))
+	{
+		return false;
+	}
+
+	int x = pos.getX();
+	int y = pos.getY();
+	if (x < 0 || x >= w || y < 0 || y >= h || static_cast<int>(lines.size()) < h + 1)
+	{
+		return false;
+	}
+
+	// A grade precisa ter uma porta (D) nessa posição
+	if (static_cast<int>(lines[1 + y].size()) < w || lines[1 + y][x] != 'D')
+	{
+		return false;
+	}
+
+	// Procura, depois da grade, a linha DOOR dessa posição
+	int alvo = -1;
+	for (std::size_t i = h + 1; i < lines.size(); i++)
+	{
+		std::istringstream ls(lines[i]);
+		std::string tag;
+		int lx = -1, ly = -1;
+		if (ls >> tag >> lx >> ly && tag == "DOOR" && lx == x && ly == y)
+		{
+			alvo = static_cast<int>(i);
+			break;
+		}
+	}
+	if (alvo == -1)
+	{
+		return false;
+	}
+
+	// A linha tem 6 campos fixos (DOOR x y arquivo tx ty) e, se houver, a chave como 7o campo.
+	// Procura onde termina o 6o campo: o que vier depois é a chave
+	std::string& linha = lines[alvo];
+	std::size_t fimCampo = 0;
+	for (int campo = 0; campo < 6; campo++)
+	{
+		std::size_t comeco = linha.find_first_not_of(" \t\r", fimCampo);   // começo do próximo campo
+		if (comeco == std::string::npos)
+		{
+			return false;   // faltam campos: linha malformada
+		}
+		fimCampo = linha.find_first_of(" \t\r", comeco);                    // fim desse campo
+		if (fimCampo == std::string::npos)
+		{
+			fimCampo = linha.size();
+		}
+	}
+
+	// Nada depois do 6o campo: a porta já está sem chave, não há o que gravar
+	if (linha.find_first_not_of(" \t\r", fimCampo) == std::string::npos)
+	{
+		return true;
+	}
+
+	// Corta a chave e grava o arquivo de volta
+	linha.erase(fimCampo);
+
+	std::ofstream out(currentPath);
+	if (!out.is_open())
+	{
+		return false;
+	}
+	for (std::size_t i = 0; i < lines.size(); i++)
+	{
+		if (i > 0)
+		{
+			out << '\n';
+		}
+		out << lines[i];
+	}
+	return out.good();
+}
+
 // Sem argumento, cria uma sala vazia; com um caminho, já carrega a sala desse arquivo
 MapSection::MapSection(std::string filePath) : mapX(0), mapY(0)
 {

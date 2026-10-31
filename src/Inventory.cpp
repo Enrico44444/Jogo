@@ -3,6 +3,7 @@
 
 #include "Inventory.h"
 #include "Player.h"
+#include "KeyItem.h"
 
 // Inventário vazio com 8 vagas
 Inventory::Inventory() : maxSize(8)
@@ -74,6 +75,35 @@ bool Inventory::hasItem(std::string name) const
 		}
 	}
 	return false;
+}
+
+// Procura no inventário uma chave com esse id. Só as KeyItem têm id, então os outros itens são ignorados.
+// Devolve nullptr se não houver.
+const KeyItem* Inventory::findKey(const std::string& keyId) const
+{
+	for (const std::unique_ptr<Item>& item : items)
+	{
+		// dynamic_cast devolve nullptr quando o item não é uma KeyItem
+		const KeyItem* key = dynamic_cast<const KeyItem*>(item.get());
+		if (key != nullptr && key->getKeyId() == keyId)
+		{
+			return key;
+		}
+	}
+	return nullptr;
+}
+
+// Consome uma unidade da chave com esse id. Devolve false se não houver.
+bool Inventory::removeKey(const std::string& keyId)
+{
+	const KeyItem* key = findKey(keyId);
+	if (key == nullptr)
+	{
+		return false;
+	}
+
+	// O nome é copiado antes de remover: se a quantidade chegar a zero, o item é apagado da lista
+	return removeItem(key->getName());
 }
 
 // Ainda não implementada

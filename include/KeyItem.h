@@ -14,6 +14,7 @@ private:
 
 public:
 	KeyItem(Position pos, std::string keyId);
+	std::string getKeyId() const { return keyId; }   // Id da chave (o mesmo da linha DOOR do mapa)
 	void use(Player player) override;   // Ainda não implementada
 	char symbol() const override;   // Desenhada como K
 

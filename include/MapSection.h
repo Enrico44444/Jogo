@@ -42,6 +42,7 @@ public:
 	Zombie getZombieAt(Position pos);   // Ainda não implementado
 	Item* getItemAt(Position pos);   // Item do chão na posição dada, ou nullptr se não houver
 	std::unique_ptr<Item> takeItemAt(Position pos);   // Tira o item da sala e o entrega a quem chamou (nullptr se não houver)
+	bool unlockDoorInFile(Position pos);   // Apaga do arquivo da sala a chave exigida pela porta dessa posição
 	bool removeItemFromFile(Position pos);   // Apaga do arquivo .txt da sala o item dessa posição, para ele não voltar ao recarregar
 	MapSection(std::string filePath = "");   // Se receber um caminho, já carrega a sala
 

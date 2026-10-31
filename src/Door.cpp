@@ -25,14 +25,23 @@ void Door::configure(std::string targetFile, Position targetPos, std::string req
 	locked = !requiredKey.empty();
 }
 
-bool Door::isLocked()
+// Diz se a porta está trancada
+bool Door::isLocked() const
 {
-	return false;
+	return locked;
 }
 
-bool Door::unlock(KeyItem key)
+// Destranca a porta se a chave tiver o mesmo id que a porta exige. Devolve true se destrancou.
+// (O requiredKey continua guardado: o Game usa o id para a mensagem)
+bool Door::unlock(const KeyItem& key)
 {
-	return false;
+	if (key.getKeyId() != requiredKey)
+	{
+		return false;
+	}
+
+	locked = false;
+	return true;
 }
 
 bool Door::use(Player player)
