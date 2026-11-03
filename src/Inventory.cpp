@@ -106,8 +106,24 @@ bool Inventory::removeKey(const std::string& keyId)
 	return removeItem(key->getName());
 }
 
-// Ainda não implementada
-bool Inventory::useItem(std::string name, Player player)
+// Usa o item com esse nome: o próprio item decide o efeito e escreve em message o que aconteceu.
+// Se o item foi gasto, tira uma unidade (a vaga é liberada quando a quantidade chega a zero).
+// Devolve true se o item foi gasto
+bool Inventory::useItem(std::string name, Player& player, std::string& message)
 {
+	for (std::size_t i = 0; i < items.size(); i++)
+	{
+		if (items[i]->getName() == name)
+		{
+			bool gasto = items[i]->use(player, message);
+			if (gasto)
+			{
+				removeItem(name);
+			}
+			return gasto;
+		}
+	}
+
+	message = "Voce não tem " + name;
 	return false;
 }

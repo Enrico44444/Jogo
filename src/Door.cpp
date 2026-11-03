@@ -44,7 +44,7 @@ bool Door::unlock(const KeyItem& key)
 	return true;
 }
 
-bool Door::use(Player player)
+bool Door::use(Player& player)
 {
 	return false;
 }

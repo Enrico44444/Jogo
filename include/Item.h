@@ -19,7 +19,7 @@ public:
 	Item();   // Item vazio
 	Item(std::string name, std::string description, int amount, Position pos);   // Item com os dados completos
 	virtual ~Item() = default;   // Virtual: permite apagar um HealItem, AmmoItem ou KeyItem por um ponteiro Item*
-	virtual void use(Player player);   // Efeito de usar o item; cada subclasse redefine
+	virtual bool use(Player& player, std::string& message);   // Efeito de usar o item, devolve true se o item foi gasto. Cada subclasse redefine
 	void addAmount(int n);   // Soma n à quantidade
 	void removeAmount(int n);   // Tira n da quantidade
 	Position getPos() const;

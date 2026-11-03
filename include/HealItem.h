@@ -12,7 +12,7 @@ private:
 
 public:
 	HealItem(Position pos, float healAmount);
-	void use(Player player) override;   // Ainda não implementada
+	bool use(Player& player, std::string& message) override;   // Cura o jogador, mas não gasta a erva se a vida já estiver cheia
 	char symbol() const override;   // Desenhada como H
 };
 

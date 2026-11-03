@@ -16,8 +16,8 @@ public:
 	Zombie();   // Zumbi com vida e dano provisórios
 	Zombie(Position pos);   // Zumbi que nasce na posição dada
 
-	void update(Player target);   // Ainda não implementada
-	void attack(Player target);   // Ainda não implementada
+	void update(Player& target);   // Ainda não implementada
+	void attack(Player& target);   // Ainda não implementada
 	void resetPosition();   // Ainda não implementada
 
 };

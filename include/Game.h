@@ -26,6 +26,7 @@ public:
 	bool unlockDoor(Door& door, Position pos);   // Garante que a porta pode ser atravessada (usa a chave, se estiver trancada)
 	void changeSection(Door door);
 	void pickUpItemHere();   // Pega o item que estiver na posição do jogador, se couber no inventário
+	void useInventoryItem();   // Pergunta qual item usar (pelo número da lista do inventário) e usa
 
 };
 

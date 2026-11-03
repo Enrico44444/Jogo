@@ -7,7 +7,6 @@
 
 #include "Item.h"
 
-//	Para não ter que incluir os .h
 class Player;
 class KeyItem;
 
@@ -28,7 +27,7 @@ public:
 	bool hasItem(std::string name) const;   // Verifica se tem um item específico
 	const KeyItem* findKey(const std::string& keyId) const;   // Procura uma chave pelo id; nullptr se não tiver
 	bool removeKey(const std::string& keyId);   // Consome uma unidade da chave com esse id
-	bool useItem(std::string name, Player player);   // Ainda não implementada
+	bool useItem(std::string name, Player& player, std::string& message);   // Usa o item com esse nome e devolve true se o item foi gasto
 
 	const std::vector<std::unique_ptr<Item>>& getItems() const { return items; }   // Para mostrar o inventário na tela
 	int getMaxSize() const { return maxSize; }   // Número de vagas

@@ -592,7 +592,7 @@ bool MapSection::unlockDoorInFile(Position pos)
 			break;
 		}
 		lines.push_back(texto.substr(inicio, fim - inicio));
-		inicio = fim + 1; 
+		inicio = fim + 1;
 	}
 
 	// A primeira linha tem "largura altura"; as h linhas seguintes são a grade

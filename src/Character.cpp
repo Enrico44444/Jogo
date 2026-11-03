@@ -1,7 +1,8 @@
 #include "Character.h"
 #include "MapSection.h"
 
-Character::Character(Position pos) : pos(pos) {}
+// Personagem com a vida cheia (100) na posição dada
+Character::Character(Position pos) : life(100), maxLife(100), pos(pos) {}
 
 // Tenta andar uma célula na direção dada (w, a, s, d).
 // MOVED: andou. BLOCKED: parede, borda do mapa ou direção inválida (não andou).
@@ -41,11 +42,23 @@ MoveResult Character::move(char direction, MapSection& section)
 	return MoveResult::MOVED;
 }
 
+// Tira vida, sem deixar ficar negativa. Dano negativo é ignorado
 void Character::takeDamage(float amount)
 {
+	if (amount <= 0)
+	{
+		return;
+	}
+
+	life -= amount;
+	if (life < 0)
+	{
+		life = 0;
+	}
 }
 
-bool Character::isAlive()
+// Está vivo enquanto a vida for maior que zero
+bool Character::isAlive() const
 {
-	return false;
+	return life > 0;
 }

@@ -1,4 +1,6 @@
 #include <iostream>
+#include <limits>
+#include <vector>
 
 #include "Game.h"
 
@@ -33,12 +35,12 @@ void Game::gameLoop()
 	}
 
 	// Deixa o cursor abaixo do inventário, para o terminal não escrever por cima da tela do jogo
-	int ultimaLinha = currentSection.getMapY() + 3 + static_cast<int>(player.getInventory().getItems().size());
+	int ultimaLinha = currentSection.getMapY() + 4 + static_cast<int>(player.getInventory().getItems().size());
 	std::cout << "\033[" << ultimaLinha + 1 << ";1H" << std::endl;
 }
 
 // Lê uma tecla do jogador e repassa para a função certa.
-// w, a, s, d: o jogador anda. q: sai do jogo. Qualquer outra tecla é ignorada.
+// w, a, s, d: o jogador anda. u: usa um item do inventário. q: sai do jogo. Qualquer outra tecla é ignorada.
 void Game::processInput()
 {
 	char tecla;
@@ -47,7 +49,7 @@ void Game::processInput()
 	message.clear();
 
 	// Apaga a linha (o que foi digitado na jogada anterior) e pede a tecla
-	std::cout << "\033[2K" << "Mover (w/a/s/d + Enter), q para sair: " << std::flush;
+	std::cout << "\033[2K" << "Mover (w/a/s/d), usar item (u + numero), sair (q): " << std::flush;
 
 	if (!(std::cin >> tecla))
 	{
@@ -81,6 +83,9 @@ void Game::processInput()
 			}
 			break;
 		}
+		case 'u': case 'U':
+			useInventoryItem();
+			break;
 		case 'q': case 'Q':
 			running = false;
 			break;
@@ -95,9 +100,9 @@ void Game::update()
 	currentSection.update(player);
 }
 
-// Mostra abaixo do mapa a mensagem e o inventário.
+// Mostra abaixo do mapa a mensagem, a vida e o inventário.
 // Linhas (contando a partir do mapa, que tem mapY linhas): mapY + 1 = aviso das teclas,
-// mapY + 2 = mensagem (ou a pergunta da porta), mapY + 3 em diante = inventário
+// mapY + 2 = mensagem (ou a pergunta da porta), mapY + 3 = vida, mapY + 4 em diante = inventário
 void Game::render()
 {
 	int linhaMensagem = currentSection.getMapY() + 2;
@@ -105,15 +110,21 @@ void Game::render()
 	// Mensagem: apaga a linha e escreve a atual (fica em branco quando não há nenhuma)
 	std::cout << "\033[" << linhaMensagem << ";1H\033[2K" << message;
 
-	// Inventário: apaga da linha seguinte até o fim da tela e escreve de novo, um item por linha
+	// Vida: apaga a linha e escreve a vida atual / máxima
+	std::cout << "\033[" << linhaMensagem + 1 << ";1H\033[2K" << "Vida: " << static_cast<int>(player.getLife()) << "/" << static_cast<int>(player.getMaxLife());
+
+	// Inventário: apaga da linha seguinte até o fim da tela e escreve de novo, um item por linha.
+	// Os itens são numerados: é o número que o jogador digita depois do u
 	const Inventory& inventory = player.getInventory();
-	int linha = linhaMensagem + 1;
+	int linha = linhaMensagem + 2;
 	std::cout << "\033[" << linha << ";1H\033[J";
-	std::cout << "Inventario (" << inventory.getItems().size() << "/" << inventory.getMaxSize() << "):";
+	std::cout << "Inventário (" << inventory.getItems().size() << "/" << inventory.getMaxSize() << "):";
+	int numero = 0;
 	for (const std::unique_ptr<Item>& item : inventory.getItems())
 	{
+		numero++;
 		linha++;
-		std::cout << "\033[" << linha << ";1H  " << item->getName() << " x" << item->getAmount();
+		std::cout << "\033[" << linha << ";1H  " << numero << ") " << item->getName() << " x" << item->getAmount();
 	}
 
 	// Devolve o cursor para a linha do aviso das teclas
@@ -222,4 +233,46 @@ bool Game::unlockDoor(Door& door, Position pos)
 		message += " (aviso: arquivo nao atualizado)";
 	}
 	return true;
+}
+
+// Pergunta qual item usar (pelo número da lista do inventário) e usa o item.
+// A mensagem do resultado vem pronta do próprio item
+void Game::useInventoryItem()
+{
+	// A pergunta fica na linha da mensagem (mapY + 2), como a pergunta da porta
+	int linha = currentSection.getMapY() + 2;
+	std::cout << "\033[" << linha << ";1H\033[2K" << "Usar qual item? (número): " << std::flush;
+
+	int numero = 0;
+	if (!(std::cin >> numero))
+	{
+		// Fim da entrada: encerra o jogo
+		if (std::cin.eof())
+		{
+			running = false;
+			return;
+		}
+
+		// Digitou algo que não é número: limpa o erro de leitura e descarta o resto da linha
+		std::cin.clear();
+		// Apaga tudo até a quebra de linha:
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		std::cout << "\033[" << linha << ";1H\033[2K" << std::flush;
+		message = "Número inválido";
+		return;
+	}
+
+	// Apaga a pergunta, para ela não ficar na tela depois de respondida
+	std::cout << "\033[" << linha << ";1H\033[2K" << std::flush;
+
+	const std::vector<std::unique_ptr<Item>>& itens = player.getInventory().getItems();
+	if (numero < 1 || numero > static_cast<int>(itens.size()))
+	{
+		message = "Não existe o item " + std::to_string(numero);
+		return;
+	}
+
+	// O nome é copiado antes: se o item for gasto por inteiro, ele sai da lista
+	std::string nome = itens[numero - 1]->getName();
+	player.useItem(nome, message);
 }

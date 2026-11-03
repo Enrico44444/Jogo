@@ -7,8 +7,21 @@ float Player::shoot()
 	return 0;
 }
 
-void Player::heal(float amount)
+// Cura o jogador sem passar da vida máxima. Devolve quanto de vida foi recuperado (0 se já estava cheia)
+float Player::heal(float amount)
 {
+	if (amount <= 0)
+	{
+		return 0;
+	}
+
+	float antes = life;
+	life += amount;
+	if (life > maxLife)
+	{
+		life = maxLife;
+	}
+	return life - antes;
 }
 
 // Verifica se o inventário tem espaço para o item
@@ -27,6 +40,13 @@ const KeyItem* Player::findKey(const std::string& keyId) const
 bool Player::useKey(const std::string& keyId)
 {
 	return inventory.removeKey(keyId);
+}
+
+// Usa um item do inventário. O próprio item decide o efeito e escreve a mensagem do resultado.
+// Devolve true se o item foi gasto
+bool Player::useItem(const std::string& name, std::string& message)
+{
+	return inventory.useItem(name, *this, message);
 }
 
 // Guarda o item no inventário

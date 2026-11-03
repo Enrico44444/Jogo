@@ -27,7 +27,7 @@ public:
 
 	bool isLocked() const;   // Está trancada?
 	bool unlock(const KeyItem& key);   // Destranca se a chave tiver o id exigido, devolve true se destrancou
-	bool use(Player player);   // Ainda não implementada
+	bool use(Player& player);   // Ainda não implementada
 
 	std::string getRequiredKey() const { return requiredKey; }   // Id da chave que a abre (vazio = sem chave)
 	std::string getTargetFile() const { return targetFile; }   // Arquivo da sala de destino

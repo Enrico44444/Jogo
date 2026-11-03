@@ -5,9 +5,11 @@
 KeyItem::KeyItem(Position pos, std::string keyId)
 	: Item("Chave " + keyId, "Abre uma porta trancada", 1, pos), keyId(keyId) {}
 
-// Ainda não implementada
-void KeyItem::use(Player player)
+// A chave é usada quando o jogador anda até a porta trancada: aqui só avisa e não gasta
+bool KeyItem::use(Player& player, std::string& message)
 {
+	message = "A chave abre a porta sozinha: Vá até ela";
+	return false;
 }
 
 // Símbolo da chave no mapa

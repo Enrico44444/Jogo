@@ -14,7 +14,7 @@ private:
 
 public:
 	AmmoItem(Position pos, AmmoType type, int ammoAmount);   // Munição na posição dada
-	void use(Player player) override;   // Ainda não implementada
+	bool use(Player& player, std::string& message) override;   // A munição é usada ao recarregar a arma: aqui só avisa
 	char symbol() const override;   // Desenhada como A
 
 };

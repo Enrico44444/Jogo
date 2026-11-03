@@ -20,9 +20,11 @@ static std::string nomeMunicao(AmmoType type)
 AmmoItem::AmmoItem(Position pos, AmmoType type, int ammoAmount)
 	: Item(nomeMunicao(type), "Municao para a arma", 1, pos), type(type), ammoAmount(ammoAmount) {}
 
-// Ainda não implementada
-void AmmoItem::use(Player player)
+// A munição só é usada ao recarregar a arma (ainda não implementado): por enquanto só avisa e não gasta
+bool AmmoItem::use(Player& player, std::string& message)
 {
+	message = "A munição é usada ao recarregar a arma";
+	return false;
 }
 
 // Símbolo da munição no mapa

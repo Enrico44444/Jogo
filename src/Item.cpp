@@ -9,8 +9,10 @@ Item::Item(std::string name, std::string description, int amount, Position pos)
     : name(name), description(description), amount(amount), pos(pos) {}
 
 // Efeito padrão: nenhum (as subclasses redefinem)
-void Item::use(Player player)
+bool Item::use(Player& player, std::string& message)
 {
+	message = "Não é possível usar " + name;
+	return false;
 }
 
 // Símbolo padrão; as subclasses devolvem o seu

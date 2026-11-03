@@ -13,11 +13,11 @@ Zombie::Zombie(Position pos) : Character(pos), damage(10), startPos(pos)
 }
 
 
-void Zombie::update(Player target)
+void Zombie::update(Player& target)
 {
 }
 
-void Zombie::attack(Player target)
+void Zombie::attack(Player& target)
 {
 }
 
