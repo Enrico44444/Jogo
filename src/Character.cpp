@@ -5,7 +5,7 @@
 Character::Character(Position pos) : life(100), maxLife(100), pos(pos) {}
 
 // Tenta andar uma célula na direção dada (w, a, s, d).
-// MOVED: andou. BLOCKED: parede, borda do mapa ou direção inválida (não andou).
+// MOVED: andou. BLOCKED: parede, borda do mapa, zumbi à frente ou direção inválida (não andou).
 // DOOR: há uma porta à frente; o personagem não anda e quem chamou decide o que fazer.
 MoveResult Character::move(char direction, MapSection& section)
 {
@@ -33,6 +33,13 @@ MoveResult Character::move(char direction, MapSection& section)
 
 	// Parede: não anda
 	if (!tile->isWalkable())
+	{
+		return MoveResult::BLOCKED;
+	}
+
+	// Zumbi na célula: não anda
+	// Só os zumbis ficam registrados na sala: o zumbi confere a posição do jogador por conta própria
+	if (section.getZombieAt(target) != nullptr)
 	{
 		return MoveResult::BLOCKED;
 	}

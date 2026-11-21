@@ -317,6 +317,12 @@ std::vector<char> MapSection::buildFrame(Position playerPos) const
 	// Camada 3: zumbis
 	for (const Zombie& zombie : zombies)
 	{
+		// Zumbi morto não é desenhado
+		if (!zombie.isAlive())
+		{
+			continue;
+		}
+
 		Position p = zombie.getPos();
 		frame[p.getY() * mapX + p.getX()] = 'Z';
 	}
@@ -400,8 +406,28 @@ int MapSection::getMapY() const {
 	return mapY;
 }
 
+// Devolve cada zumbi à sua posição inicial
 void MapSection::resetZombies()
 {
+	for (Zombie& zombie : zombies)
+	{
+		zombie.resetPosition();
+	}
+}
+
+// Faz cada zumbi agir (perseguir ou atacar o jogador). Chamada a cada quadro.
+// Devolve true se algum zumbi andou ou atacou (a tela precisa ser atualizada)
+bool MapSection::updateZombies(Player& player, float dt)
+{
+	bool mudou = false;
+	for (Zombie& zombie : zombies)
+	{
+		if (zombie.update(player, *this, dt))
+		{
+			mudou = true;
+		}
+	}
+	return mudou;
 }
 
 // Devolve o tile da posição dada
@@ -428,9 +454,18 @@ Door* MapSection::getDoorAt(Position pos)
 	return dynamic_cast<Door*>(getTileAt(pos));
 }
 
-Zombie MapSection::getZombieAt(Position pos)
+// Devolve o zumbi vivo da posição dada (sem passar a posse), ou nullptr se não houver.
+// Zumbi morto não conta: ele não é desenhado e não deve bloquear o caminho
+Zombie* MapSection::getZombieAt(Position pos)
 {
-	return Zombie();
+	for (Zombie& zombie : zombies)
+	{
+		if (zombie.isAlive() && zombie.getPos().equals(pos))
+		{
+			return &zombie;
+		}
+	}
+	return nullptr;
 }
 
 // Devolve o item do chão na posição dada (sem passar a posse), ou nullptr se não houver

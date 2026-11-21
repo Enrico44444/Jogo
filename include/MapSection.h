@@ -35,11 +35,12 @@ public:
 	int getMapX() const;
 	int getMapY() const;
 	void render();   // Imprime o mapa inteiro pela primeira vez (limpa a tela antes)
-	void resetZombies();   // Ainda não implementado
+	void resetZombies();   // Devolve cada zumbi à sua posição inicial
+	bool updateZombies(Player& player, float dt);   // Faz cada zumbi agir (perseguir ou atacar o jogador). Devolve true se algo mudou na tela
 	Tile* getTileAt(Position pos);   // Tile da posição dada, ou nullptr se estiver fora da sala
 	bool isWalkable(Position pos);   // Ainda não implementado
 	Door* getDoorAt(Position pos);   // Porta da posição dada, ou nullptr se não houver porta ali
-	Zombie getZombieAt(Position pos);   // Ainda não implementado
+	Zombie* getZombieAt(Position pos);   // Zumbi vivo da posição dada, ou nullptr se não houver
 	Item* getItemAt(Position pos);   // Item do chão na posição dada, ou nullptr se não houver
 	std::unique_ptr<Item> takeItemAt(Position pos);   // Tira o item da sala e o entrega a quem chamou (nullptr se não houver)
 	bool unlockDoorInFile(Position pos);   // Apaga do arquivo da sala a chave exigida pela porta dessa posição

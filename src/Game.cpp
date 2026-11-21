@@ -16,6 +16,10 @@ static const float MESSAGE_TIME = 3.0f;
 // Duração de cada quadro do jogo (em milissegundos): 33 ms são cerca de 30 quadros por segundo
 static const int FRAME_MS = 33;
 
+// O dt de um quadro nunca passa disto (em segundos). Depois de uma pausa longa (a pergunta da porta, por exemplo)
+// o jogo não pode "pular" o tempo, senão os zumbis agiriam todos de uma vez
+static const float MAX_DT = 0.1f;
+
 Game::Game() : player(Position()), running(false), messageTimer(0), moveCooldown(0), needsRedraw(true)
 {
 }
@@ -51,6 +55,10 @@ void Game::gameLoop()
 		auto inicio = std::chrono::steady_clock::now();
 		float dt = std::chrono::duration<float>(inicio - anterior).count();   // segundos desde o quadro anterior
 		anterior = inicio;
+		if (dt > MAX_DT)
+		{
+			dt = MAX_DT;
+		}
 
 		processInput();
 		update(dt);
@@ -160,6 +168,25 @@ void Game::update(float dt)
 			message.clear();
 			needsRedraw = true;
 		}
+	}
+
+	// Os zumbis perseguem e atacam. Se a vida do jogador caiu, avisa
+	float vidaAntes = player.getLife();
+	if (currentSection.updateZombies(player, dt))
+	{
+		needsRedraw = true;   // um zumbi andou ou atacou
+	}
+	float dano = vidaAntes - player.getLife();
+	if (dano > 0)
+	{
+		showMessage("Zumbi atacou: -" + std::to_string(static_cast<int>(dano)) + " de vida");
+	}
+
+	// Vida zerada: fim de jogo (o render ainda mostra a mensagem e a vida antes de sair)
+	if (!player.isAlive())
+	{
+		showMessage("Você morreu. Fim de jogo");
+		running = false;
 	}
 
 	// O mapa só é redesenhado quando algo mudou (o MapSection::update escreve só as células diferentes)

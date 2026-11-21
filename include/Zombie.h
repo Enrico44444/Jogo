@@ -11,14 +11,17 @@ class Zombie : public Character
 private:
 	float damage;
 	Position startPos;   // Posição inicial, para onde volta quando a sala é recarregada
+	float moveTimer;   // Segundos até o zumbi poder dar o próximo passo
+	float attackTimer;   // Segundos até o zumbi poder atacar de novo
+	bool adjacent;   // Estava ao lado do jogador no quadro anterior?
 
 public:
 	Zombie();   // Zumbi com vida e dano provisórios
 	Zombie(Position pos);   // Zumbi que nasce na posição dada
 
-	void update(Player& target);   // Ainda não implementada
-	void attack(Player& target);   // Ainda não implementada
-	void resetPosition();   // Ainda não implementada
+	bool update(Player& target, MapSection& section, float dt);   // Ataca o jogador se estiver ao lado dele, senão anda em direção a ele. Devolve true se andou ou atacou
+	void attack(Player& target);   // Tira o dano do zumbi da vida do jogador
+	void resetPosition();   // Volta para a posição inicial
 
 };
 
