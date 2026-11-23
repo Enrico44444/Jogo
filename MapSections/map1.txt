@@ -1,16 +1,17 @@
-10 6
-##########
-#........D
-#.W......#
-#..H.A..W#
-#....K..A#
-##########
-PLAYER 1 1
-ZOMBIE 6 1
-DOOR 9 1 MapSections/map2.txt 1 2 chave1
-HEAL 3 3 25
-AMMO 5 3 PISTOL 12
-KEY 5 4 chave1
-WEAPON 2 2 PISTOL
-WEAPON 8 3 RIFLE
-AMMO 8 4 RIFLE 10
+20 10
+####################
+#......#......#....#
+#......#.H....#..H.#
+#......#......#....#
+#......#...........#
+#......#...######..D
+#..........#.......#
+#...W......#...H...#
+#..........#.......#
+####################
+PLAYER 2 2
+DOOR 19 5 MapSections/map2.txt 1 6
+WEAPON 4 7 PISTOL
+HEAL 9 2 25
+HEAL 15 7 25
+HEAL 17 2 25

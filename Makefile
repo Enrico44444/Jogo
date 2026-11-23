@@ -6,7 +6,7 @@ FLAGS = -Wall -Werror
 LFLAGS = -fsanitize=address -fsanitize=leak
 
 all: $(SRCS)
-	$(CC) $(SRCS) -o $(EXE_NAME) $(FLAGS) $(LFLAGS) -O3 -g -I$(INCLUDE) 
+	$(CC) $(SRCS) -o $(EXE_NAME) $(FLAGS) $(LFLAGS) -O3 -I$(INCLUDE) 
 clean:
 	rm -f $(EXE_NAME)
 

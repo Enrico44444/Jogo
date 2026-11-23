@@ -1,20 +1,22 @@
 # Headers do projeto
 
-- `Position.h`: guarda uma posição (x, y) e calcula a posição à frente.
+- `Position.h`: guarda uma posição (x, y) e calcula a posição vizinha em uma direção.
 - `MoveResult.h`: define os resultados possíveis de um movimento (andou, bloqueado, porta).
-- `Character.h`: base comum de quem tem vida e posição, e pode se mover e receber dano.
-- `Player.h`: o jogador, que anda, atira, se cura e pega itens.
-- `Zombie.h`: o inimigo, que persegue e ataca o jogador e volta à posição inicial.
-- `Weapon.h`: a arma (pistola, escopeta ou rifle), com dano, alcance e munição no carregador, que atira e recarrega.
-- `Item.h`: base comum dos itens, com nome, descrição, quantidade e um efeito ao usar.
+- `AmmoType.h`: define os tipos de munição (pistola, escopeta, rifle); cada arma usa um tipo.
+- `Input.h`: lê o teclado sem esperar Enter (inclui as setas) e restaura o terminal ao sair.
+- `Character.h`: base comum de quem tem vida (atual e máxima) e posição, e pode se mover e receber dano.
+- `Player.h`: o jogador, que anda, vira para uma direção, atira, recarrega, equipa e guarda a arma, se cura e pega itens.
+- `Zombie.h`: o inimigo, que persegue e ataca o jogador, guarda a posição inicial e volta a ela quando a sala é recarregada.
+- `Weapon.h`: a arma (pistola, escopeta ou rifle), com dano, alcance, intervalo entre tiros e munição no carregador, que atira e recarrega.
+- `Item.h`: base comum dos itens, com nome, descrição, quantidade, posição, um efeito ao usar e o símbolo no mapa.
 - `HealItem.h`: item que cura o jogador.
-- `AmmoItem.h`: munição de um tipo; a quantidade do item é o número de balas, usadas ao recarregar a arma.
-- `WeaponItem.h`: arma no chão ou no inventário, que o jogador equipa ao usar.
+- `AmmoItem.h`: munição de um tipo; a quantidade do item é o número de balas, usadas ao recarregar a arma (tecla r).
 - `KeyItem.h`: chave que abre portas trancadas.
-- `Inventory.h`: guarda os itens do jogador e permite adicionar, remover e usar.
+- `WeaponItem.h`: arma no chão ou no inventário, que o jogador equipa ao usar.
+- `Inventory.h`: guarda os itens do jogador (itens com o mesmo nome empilham) e permite adicionar, remover, usar e procurar chave ou munição.
 - `Tile.h`: base comum das células do mapa.
 - `Floor.h`: piso onde se pode andar.
 - `Wall.h`: parede que bloqueia o caminho.
 - `Door.h`: porta que leva a outra sala e pode estar trancada.
-- `MapSection.h`: a sala atual, lida de um arquivo `.txt`, com seus tiles, zumbis, itens e portas.
-- `Game.h`: controla o jogo: lê a tecla, atualiza o estado, desenha a tela e troca de sala.
+- `MapSection.h`: a sala atual, lida de um arquivo `.txt`, com seus tiles, zumbis, itens e portas; acha o zumbi na linha de um tiro e atualiza o arquivo quando um item é pego, uma porta é destrancada ou um zumbi morre.
+- `Game.h`: controla o jogo: lê a tecla, atualiza o estado, desenha a tela, atira, troca de sala e mostra mensagens.
