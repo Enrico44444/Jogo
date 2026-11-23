@@ -1,10 +1,9 @@
 8 5
 ########
-#......#
+#W.....#
 D......#
 #......#
 ########
 PLAYER 1 2
-ZOMBIE 4 1
-ZOMBIE 5 3
 DOOR 0 2 MapSections/map1.txt 8 1
+WEAPON 1 1 SHOTGUN

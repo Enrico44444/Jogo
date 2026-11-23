@@ -16,14 +16,14 @@ static std::string nomeMunicao(AmmoType type)
 	return "Municao Pistola";
 }
 
-// Munição com nome conforme o tipo e a quantidade de balas informada
+// Munição com nome conforme o tipo. A quantidade do item é o número de balas, então pilhas do mesmo tipo somam as balas
 AmmoItem::AmmoItem(Position pos, AmmoType type, int ammoAmount)
-	: Item(nomeMunicao(type), "Municao para a arma", 1, pos), type(type), ammoAmount(ammoAmount) {}
+	: Item(nomeMunicao(type), "Municao para a arma", ammoAmount, pos), type(type) {}
 
-// A munição só é usada ao recarregar a arma (ainda não implementado): por enquanto só avisa e não gasta
+// A munição só é gasta ao recarregar a arma (tecla r, Player::reload): aqui só avisa e não gasta
 bool AmmoItem::use(Player& player, std::string& message)
 {
-	message = "A munição é usada ao recarregar a arma";
+	message = "A munição é usada ao recarregar a arma: tecla r";
 	return false;
 }
 

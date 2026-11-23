@@ -11,6 +11,7 @@
 #include "Door.h"
 #include "Player.h"
 #include "Position.h"
+#include "Weapon.h"
 
 
 // Uma sala do jogo, montada a partir de um arquivo .txt.
@@ -41,8 +42,10 @@ public:
 	bool isWalkable(Position pos);   // Ainda não implementado
 	Door* getDoorAt(Position pos);   // Porta da posição dada, ou nullptr se não houver porta ali
 	Zombie* getZombieAt(Position pos);   // Zumbi vivo da posição dada, ou nullptr se não houver
+	Zombie* getZombieInLine(Position from, char direction, int range);   // Primeiro zumbi vivo no caminho de um tiro, ou nullptr
 	Item* getItemAt(Position pos);   // Item do chão na posição dada, ou nullptr se não houver
 	std::unique_ptr<Item> takeItemAt(Position pos);   // Tira o item da sala e o entrega a quem chamou (nullptr se não houver)
+	bool removeZombieFromFile(Position startPos);   // Apaga do arquivo .txt da sala a linha ZOMBIE com essa posição inicial, para o zumbi morto não voltar ao recarregar
 	bool unlockDoorInFile(Position pos);   // Apaga do arquivo da sala a chave exigida pela porta dessa posição
 	bool removeItemFromFile(Position pos);   // Apaga do arquivo .txt da sala o item dessa posição, para ele não voltar ao recarregar
 	MapSection(std::string filePath = "");   // Se receber um caminho, já carrega a sala

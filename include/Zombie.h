@@ -21,6 +21,7 @@ public:
 
 	bool update(Player& target, MapSection& section, float dt);   // Ataca o jogador se estiver ao lado dele, senão anda em direção a ele. Devolve true se andou ou atacou
 	void attack(Player& target);   // Tira o dano do zumbi da vida do jogador
+	Position getStartPos() const { return startPos; }   // Posição inicial (a mesma da linha ZOMBIE do arquivo da sala)
 	void resetPosition();   // Volta para a posição inicial
 
 };

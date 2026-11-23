@@ -20,7 +20,7 @@ static const int FRAME_MS = 33;
 // o jogo não pode "pular" o tempo, senão os zumbis agiriam todos de uma vez
 static const float MAX_DT = 0.1f;
 
-Game::Game() : player(Position()), running(false), messageTimer(0), moveCooldown(0), needsRedraw(true)
+Game::Game() : player(Position()), running(false), messageTimer(0), moveCooldown(0), shootCooldown(0), needsRedraw(true)
 {
 }
 
@@ -97,6 +97,7 @@ void Game::processInput()
 
 // Trata uma tecla e repassa para a função certa.
 // w, a, s, d (ou as setas): o jogador anda, no máximo um passo a cada MOVE_INTERVAL.
+// f: atira na direção em que o jogador olha. r: recarrega a arma. g: guarda a arma no inventário.
 // 1 a 8: usa o item de mesmo número do inventário. q: sai do jogo. Qualquer outra tecla é ignorada.
 void Game::handleKey(char key)
 {
@@ -107,6 +108,9 @@ void Game::handleKey(char key)
 		case 's': case 'S':
 		case 'd': case 'D':
 		{
+			// O jogador vira para onde apertou, mesmo que não ande (parede, zumbi): assim dá para mirar sem andar
+			player.face(key);
+
 			// Ainda no intervalo do passo anterior: ignora a tecla (segurar a tecla não faz o jogador disparar)
 			if (moveCooldown > 0)
 			{
@@ -135,6 +139,23 @@ void Game::handleKey(char key)
 			}
 			break;
 		}
+		case 'f': case 'F':
+			shootWeapon();
+			break;
+		case 'r': case 'R':
+		{
+			std::string resultado;
+			player.reload(resultado);
+			showMessage(resultado);
+			break;
+		}
+		case 'g': case 'G':
+		{
+			std::string resultado;
+			player.unequipWeapon(resultado);
+			showMessage(resultado);
+			break;
+		}
 		case '1': case '2': case '3': case '4':
 		case '5': case '6': case '7': case '8':
 			useInventoryItem(key - '0');
@@ -156,6 +177,15 @@ void Game::update(float dt)
 		if (moveCooldown < 0)
 		{
 			moveCooldown = 0;
+		}
+	}
+
+	if (shootCooldown > 0)
+	{
+		shootCooldown -= dt;
+		if (shootCooldown < 0)
+		{
+			shootCooldown = 0;
 		}
 	}
 
@@ -211,13 +241,22 @@ void Game::render()
 	int linhaMensagem = currentSection.getMapY() + 2;
 
 	// Ajuda das teclas (linha mapY + 1)
-	std::cout << "\033[" << linhaMensagem - 1 << ";1H\033[2K" << "Andar: setas ou w/a/s/d  |  Usar item: 1 a 8  |  Sair: q";
+	std::cout << "\033[" << linhaMensagem - 1 << ";1H\033[2K" << "Andar: setas ou w/a/s/d  |  Atirar: f  |  Recarregar: r  |  Guardar arma: g  |  Usar item: 1 a 8  |  Sair: q";
 
 	// Mensagem: apaga a linha e escreve a atual (fica em branco quando não há nenhuma)
 	std::cout << "\033[" << linhaMensagem << ";1H\033[2K" << message;
 
-	// Vida: apaga a linha e escreve a vida atual / máxima
+	// Vida e arma: apaga a linha e escreve a vida atual / máxima e, se houver, a arma equipada com as balas do carregador
 	std::cout << "\033[" << linhaMensagem + 1 << ";1H\033[2K" << "Vida: " << static_cast<int>(player.getLife()) << "/" << static_cast<int>(player.getMaxLife());
+	if (player.hasWeapon())
+	{
+		const Weapon& arma = player.getWeapon();
+		std::cout << "  |  Arma: " << arma.getName() << " " << arma.getAmmo() << "/" << arma.getMaxAmmo();
+	}
+	else
+	{
+		std::cout << "  |  Arma: nenhuma";
+	}
 
 	// Inventário: apaga da linha seguinte até o fim da tela e escreve de novo, um item por linha.
 	// Os itens são numerados: é o número da tecla que usa o item
@@ -356,6 +395,57 @@ bool Game::unlockDoor(Door& door, Position pos)
 	}
 	showMessage(texto);
 	return true;
+}
+
+// Atira na direção em que o jogador olha. O tiro vai até o alcance da arma e acerta o primeiro zumbi no caminho
+// (parede e porta o bloqueiam). A mensagem diz o que aconteceu
+void Game::shootWeapon()
+{
+	if (!player.hasWeapon())
+	{
+		showMessage("Nenhuma arma equipada");
+		return;
+	}
+
+	// Ainda no intervalo do tiro anterior: ignora a tecla (segurar a tecla não esvazia o carregador de uma vez)
+	if (shootCooldown > 0)
+	{
+		return;
+	}
+
+	if (!player.getWeapon().hasAmmo())
+	{
+		showMessage("Sem balas no carregador: recarregue com r");
+		return;
+	}
+
+	// O alcance é lido antes: shoot gasta a bala, mas não muda a arma
+	int alcance = player.getWeapon().getRange();
+	shootCooldown = player.getWeapon().getFireInterval();
+	float dano = player.shoot();
+
+	Zombie* alvo = currentSection.getZombieInLine(player.getPos(), player.getFacing(), alcance);
+	if (alvo == nullptr)
+	{
+		showMessage("Tiro perdido");
+		return;
+	}
+
+	alvo->takeDamage(dano);
+	if (alvo->isAlive())
+	{
+		showMessage("Acertou o zumbi: -" + std::to_string(static_cast<int>(dano)) + " de vida");
+	}
+	else
+	{
+		// Apaga o zumbi do arquivo da sala, para ele não voltar quando a sala for carregada de novo
+		std::string texto = "Zumbi morto";
+		if (!currentSection.removeZombieFromFile(alvo->getStartPos()))
+		{
+			texto += " (aviso: arquivo nao atualizado)";
+		}
+		showMessage(texto);
+	}
 }
 
 // Usa o item de número "numero" da lista do inventário (o mesmo número mostrado na tela).

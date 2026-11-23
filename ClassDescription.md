@@ -5,10 +5,11 @@
 - `Character.h`: base comum de quem tem vida e posição, e pode se mover e receber dano.
 - `Player.h`: o jogador, que anda, atira, se cura e pega itens.
 - `Zombie.h`: o inimigo, que persegue e ataca o jogador e volta à posição inicial.
-- `Weapon.h`: a arma, com dano e munição, que atira e recarrega.
+- `Weapon.h`: a arma (pistola, escopeta ou rifle), com dano, alcance e munição no carregador, que atira e recarrega.
 - `Item.h`: base comum dos itens, com nome, descrição, quantidade e um efeito ao usar.
 - `HealItem.h`: item que cura o jogador.
-- `AmmoItem.h`: item que dá munição à arma.
+- `AmmoItem.h`: munição de um tipo; a quantidade do item é o número de balas, usadas ao recarregar a arma.
+- `WeaponItem.h`: arma no chão ou no inventário, que o jogador equipa ao usar.
 - `KeyItem.h`: chave que abre portas trancadas.
 - `Inventory.h`: guarda os itens do jogador e permite adicionar, remover e usar.
 - `Tile.h`: base comum das células do mapa.

@@ -6,9 +6,11 @@
 #include <vector>
 
 #include "Item.h"
+#include "AmmoType.h"
 
 class Player;
 class KeyItem;
+class AmmoItem;
 
 // Inventário do jogador. Itens com o mesmo nome ficam empilhados em uma única vaga.
 class Inventory
@@ -27,6 +29,8 @@ public:
 	bool hasItem(std::string name) const;   // Verifica se tem um item específico
 	const KeyItem* findKey(const std::string& keyId) const;   // Procura uma chave pelo id; nullptr se não tiver
 	bool removeKey(const std::string& keyId);   // Consome uma unidade da chave com esse id
+	const AmmoItem* findAmmo(AmmoType type) const;   // Procura a munição desse tipo; nullptr se não tiver
+	bool removeAmount(std::string name, int n);   // Tira n unidades do item com esse nome (a vaga é liberada se zerar)
 	bool useItem(std::string name, Player& player, std::string& message);   // Usa o item com esse nome e devolve true se o item foi gasto
 
 	const std::vector<std::unique_ptr<Item>>& getItems() const { return items; }   // Para mostrar o inventário na tela

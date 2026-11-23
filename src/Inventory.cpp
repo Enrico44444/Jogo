@@ -4,6 +4,7 @@
 #include "Inventory.h"
 #include "Player.h"
 #include "KeyItem.h"
+#include "AmmoItem.h"
 
 // Inventário vazio com 8 vagas
 Inventory::Inventory() : maxSize(8)
@@ -104,6 +105,41 @@ bool Inventory::removeKey(const std::string& keyId)
 
 	// O nome é copiado antes de remover: se a quantidade chegar a zero, o item é apagado da lista
 	return removeItem(key->getName());
+}
+
+// Procura no inventário a munição desse tipo. Só as AmmoItem têm tipo, então os outros itens são ignorados.
+// Devolve nullptr se não houver.
+const AmmoItem* Inventory::findAmmo(AmmoType type) const
+{
+	for (const std::unique_ptr<Item>& item : items)
+	{
+		// dynamic_cast devolve nullptr quando o item não é uma AmmoItem
+		const AmmoItem* ammo = dynamic_cast<const AmmoItem*>(item.get());
+		if (ammo != nullptr && ammo->getType() == type)
+		{
+			return ammo;
+		}
+	}
+	return nullptr;
+}
+
+// Tira n unidades do item com esse nome (para a munição, n é o número de balas).
+// Se a quantidade chega a zero, a vaga é liberada. Devolve false se não houver o item
+bool Inventory::removeAmount(std::string name, int n)
+{
+	for (std::size_t i = 0; i < items.size(); i++)
+	{
+		if (items[i]->getName() == name)
+		{
+			items[i]->removeAmount(n);
+			if (items[i]->getAmount() <= 0)
+			{
+				items.erase(items.begin() + i);
+			}
+			return true;
+		}
+	}
+	return false;
 }
 
 // Usa o item com esse nome: o próprio item decide o efeito e escreve em message o que aconteceu.

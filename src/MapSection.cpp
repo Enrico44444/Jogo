@@ -9,6 +9,29 @@
 #include "HealItem.h"
 #include "AmmoItem.h"
 #include "KeyItem.h"
+#include "WeaponItem.h"
+
+// Converte o texto do arquivo (PISTOL, SHOTGUN ou RIFLE) no AmmoType. Devolve false se o texto não for um tipo válido
+static bool lerTipo(const std::string& nome, AmmoType& tipo)
+{
+	if (nome == "PISTOL")
+	{
+		tipo = AmmoType::PISTOL;
+	}
+	else if (nome == "SHOTGUN")
+	{
+		tipo = AmmoType::SHOTGUN;
+	}
+	else if (nome == "RIFLE")
+	{
+		tipo = AmmoType::RIFLE;
+	}
+	else
+	{
+		return false;
+	}
+	return true;
+}
 
 bool MapSection::loadFromFile(std::string path)
 {	
@@ -81,7 +104,8 @@ bool MapSection::loadFromFile(std::string path)
 				case 'H':
 				case 'A':
 				case 'K':
-					// H, A e K ficam sobre um piso; o item em si vem das linhas abaixo da grade
+				case 'W':
+					// H, A, K e W ficam sobre um piso; o item em si vem das linhas abaixo da grade
 					newTiles.push_back(std::unique_ptr<Tile>(new Floor(Position(j, i))));
 					break;
 				case 'D':
@@ -123,7 +147,7 @@ bool MapSection::loadFromFile(std::string path)
 
 		// Tag desconhecida: provavelmente erro de digitação no arquivo
 		if (tag != "PLAYER" && tag != "ZOMBIE" && tag != "DOOR"
-			&& tag != "HEAL" && tag != "AMMO" && tag != "KEY")
+			&& tag != "HEAL" && tag != "AMMO" && tag != "KEY" && tag != "WEAPON")
 		{
 			std::cerr << "Erro: linha " << lineNo << ": tag desconhecida " << tag << std::endl;
 			return false;
@@ -150,7 +174,7 @@ bool MapSection::loadFromFile(std::string path)
 		if (tag == "PLAYER" || tag == "ZOMBIE")
 		{
 			// Jogador e zumbi só podem começar sobre um piso
-			if (celula != '.' && celula != 'H' && celula != 'A' && celula != 'K')
+			if (celula != '.' && celula != 'H' && celula != 'A' && celula != 'K' && celula != 'W')
 			{
 				std::cerr << "Erro: linha " << lineNo << ": " << tag << " precisa estar sobre um piso" << std::endl;
 				return false;
@@ -195,8 +219,8 @@ bool MapSection::loadFromFile(std::string path)
 		}
 		else
 		{
-			// HEAL, AMMO e KEY: cada um precisa do seu símbolo na grade (H, A ou K)
-			char esperado = (tag == "HEAL") ? 'H' : (tag == "AMMO") ? 'A' : 'K';
+			// HEAL, AMMO, KEY e WEAPON: cada um precisa do seu símbolo na grade (H, A, K ou W)
+			char esperado = (tag == "HEAL") ? 'H' : (tag == "AMMO") ? 'A' : (tag == "WEAPON") ? 'W' : 'K';
 			if (celula != esperado)
 			{
 				std::cerr << "Erro: linha " << lineNo << ": nao ha '" << esperado
@@ -233,24 +257,37 @@ bool MapSection::loadFromFile(std::string path)
 				}
 
 				AmmoType tipo = AmmoType::PISTOL;
-				if (nomeTipo == "PISTOL")
-				{
-					tipo = AmmoType::PISTOL;
-				}
-				else if (nomeTipo == "SHOTGUN")
-				{
-					tipo = AmmoType::SHOTGUN;
-				}
-				else if (nomeTipo == "RIFLE")
-				{
-					tipo = AmmoType::RIFLE;
-				}
-				else
+				if (!lerTipo(nomeTipo, tipo))
 				{
 					std::cerr << "Erro: linha " << lineNo << ": tipo de municao desconhecido " << nomeTipo << std::endl;
 					return false;
 				}
 				newItems.push_back(std::unique_ptr<Item>(new AmmoItem(p, tipo, quantidade)));
+			}
+			else if (tag == "WEAPON")
+			{
+				// WEAPON x y tipo [balas]: o tipo escolhe a arma; as balas do carregador são opcionais (sem elas, vem cheio)
+				std::string nomeTipo;
+				if (!(ls >> nomeTipo))
+				{
+					std::cerr << "Erro: linha " << lineNo << ": esperado 'WEAPON x y PISTOL|SHOTGUN|RIFLE [balas]'" << std::endl;
+					return false;
+				}
+
+				AmmoType tipo = AmmoType::PISTOL;
+				if (!lerTipo(nomeTipo, tipo))
+				{
+					std::cerr << "Erro: linha " << lineNo << ": tipo de arma desconhecido " << nomeTipo << std::endl;
+					return false;
+				}
+
+				Weapon arma(tipo);
+				int balas = 0;
+				if (ls >> balas)
+				{
+					arma = Weapon(tipo, balas);
+				}
+				newItems.push_back(std::unique_ptr<Item>(new WeaponItem(p, arma)));
 			}
 			else
 			{
@@ -273,7 +310,7 @@ bool MapSection::loadFromFile(std::string path)
 		for (int x = 0; x < w; x++)
 		{
 			char c = grid[y][x];
-			if ((c == 'D' || c == 'H' || c == 'A' || c == 'K') && !tratado[y * w + x])
+			if ((c == 'D' || c == 'H' || c == 'A' || c == 'K' || c == 'W') && !tratado[y * w + x])
 			{
 				std::cerr << "Erro: '" << c << "' em (" << x << ", " << y << ") sem a linha correspondente" << std::endl;
 				return false;
@@ -468,6 +505,30 @@ Zombie* MapSection::getZombieAt(Position pos)
 	return nullptr;
 }
 
+// Devolve o primeiro zumbi vivo no caminho de um tiro: anda célula a célula a partir de "from" na direção dada,
+// até "range" células. Parede ou porta param o tiro (o zumbi atrás delas não é atingido)
+Zombie* MapSection::getZombieInLine(Position from, char direction, int range)
+{
+	Position atual = from;
+	for (int i = 0; i < range; i++)
+	{
+		atual = atual.nextPos(direction);
+
+		Tile* tile = getTileAt(atual);
+		if (tile == nullptr || !tile->isWalkable())
+		{
+			return nullptr;
+		}
+
+		Zombie* zombie = getZombieAt(atual);
+		if (zombie != nullptr)
+		{
+			return zombie;
+		}
+	}
+	return nullptr;
+}
+
 // Devolve o item do chão na posição dada (sem passar a posse), ou nullptr se não houver
 Item* MapSection::getItemAt(Position pos)
 {
@@ -552,11 +613,11 @@ bool MapSection::removeItemFromFile(Position pos)
 		return false;
 	}
 	char simbolo = linhaGrade[x];
-	if (simbolo != 'H' && simbolo != 'A' && simbolo != 'K')
+	if (simbolo != 'H' && simbolo != 'A' && simbolo != 'K' && simbolo != 'W')
 	{
 		return false;
 	}
-	std::string etiqueta = (simbolo == 'H') ? "HEAL" : (simbolo == 'A') ? "AMMO" : "KEY";
+	std::string etiqueta = (simbolo == 'H') ? "HEAL" : (simbolo == 'A') ? "AMMO" : (simbolo == 'W') ? "WEAPON" : "KEY";
 
 	// Procura, depois da grade, a linha desse item (etiqueta e posição iguais)
 	int alvo = -1;
@@ -595,6 +656,82 @@ bool MapSection::removeItemFromFile(Position pos)
 		out << lines[i];
 	}
 	// good só retorna true caso não haja erros.
+	return out.good();
+}
+
+// Apaga do arquivo .txt desta sala a linha do zumbi que nasceu na posição dada (startPos, não onde ele morreu).
+// Assim o zumbi morto não volta quando a sala for carregada de novo.
+// Devolve false se não conseguir.
+bool MapSection::removeZombieFromFile(Position startPos)
+{
+	// Lê o arquivo inteiro
+	std::ifstream in(currentPath);
+	if (!in.is_open())
+	{
+		return false;
+	}
+	std::stringstream conteudo;
+	conteudo << in.rdbuf();
+	in.close();
+
+	// Separa em linhas
+	std::vector<std::string> lines;
+	std::string texto = conteudo.str();
+	std::size_t inicio = 0;
+	while (true)
+	{
+		std::size_t fim = texto.find('\n', inicio);
+		if (fim == std::string::npos)
+		{
+			lines.push_back(texto.substr(inicio));
+			break;
+		}
+		lines.push_back(texto.substr(inicio, fim - inicio));
+		inicio = fim + 1;
+	}
+
+	// A primeira linha tem "largura altura"; as h linhas seguintes são a grade
+	int w = 0, h = 0;
+	std::istringstream tamanho(lines[0]);
+	if (!(tamanho >> w >> h) || static_cast<int>(lines.size()) < h + 1)
+	{
+		return false;
+	}
+
+	// Procura, depois da grade, a linha ZOMBIE com essa posição (só a primeira, se houver repetidas)
+	int alvo = -1;
+	for (std::size_t i = h + 1; i < lines.size(); i++)
+	{
+		std::istringstream ls(lines[i]);
+		std::string tag;
+		int lx = -1, ly = -1;
+		if (ls >> tag >> lx >> ly && tag == "ZOMBIE" && lx == startPos.getX() && ly == startPos.getY())
+		{
+			alvo = static_cast<int>(i);
+			break;
+		}
+	}
+	if (alvo == -1)
+	{
+		return false;
+	}
+
+	lines.erase(lines.begin() + alvo);
+
+	// Grava o arquivo de volta
+	std::ofstream out(currentPath);
+	if (!out.is_open())
+	{
+		return false;
+	}
+	for (std::size_t i = 0; i < lines.size(); i++)
+	{
+		if (i > 0)
+		{
+			out << '\n';
+		}
+		out << lines[i];
+	}
 	return out.good();
 }
 
