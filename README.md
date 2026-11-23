@@ -2,6 +2,8 @@
 
 Jogo de terminal em C++ no estilo de Resident Evil 1: você anda por salas desenhadas em texto, pega armas, munição, ervas e chaves, abre portas e enfrenta zumbis.
 
+O diagrama de classes UML é o arquivo `Diagrama de Classes UML.asta` e pode ser aberto utilizando o software `Astah UML`
+
 > **Funciona apenas em Linux.** A leitura do teclado (`src/Input.cpp`) usa `termios`, `select` e `unistd.h`, que são específicos de sistemas POSIX, e a tela é desenhada com códigos de escape ANSI. O jogo **não compila no Windows** nativo.
 
 ## Requisitos
