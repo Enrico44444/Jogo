@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <string>
 #include <utility>
 
@@ -27,13 +28,14 @@ bool Inventory::addItem(std::unique_ptr<Item> item)
 	}
 
 	// Já existe uma pilha com esse nome: só soma
-	for (std::unique_ptr<Item>& existente : items)
+	// find_if devolve um iterador para o primeiro item em que a lambda dá true (ou items.end() se nenhum der).
+	// [&] deixa a lambda usar o "item" desta função
+	auto existente = std::find_if(items.begin(), items.end(),
+		[&](const std::unique_ptr<Item>& i) { return i->getName() == item->getName(); });
+	if (existente != items.end())
 	{
-		if (existente->getName() == item->getName())
-		{
-			existente->addAmount(item->getAmount());
-			return true;
-		}
+		(*existente)->addAmount(item->getAmount());
+		return true;
 	}
 
 	// Item novo: ocupa uma vaga
@@ -44,19 +46,7 @@ bool Inventory::addItem(std::unique_ptr<Item> item)
 // Tira uma unidade do item com esse nome, se a quantidade chega a zero, a vaga é liberada
 bool Inventory::removeItem(std::string name)
 {
-	for (std::size_t i = 0; i < items.size(); i++)
-	{
-		if (items[i]->getName() == name)
-		{
-			items[i]->removeAmount(1);
-			if (items[i]->getAmount() <= 0)
-			{
-				items.erase(items.begin() + i);
-			}
-			return true;
-		}
-	}
-	return false;
+	return removeAmount(name, 1);
 }
 
 // Verifica se o inventário está cheio
@@ -68,30 +58,27 @@ bool Inventory::isFull() const
 // Verifica se o item está no inventário
 bool Inventory::hasItem(std::string name) const
 {
-	for (const std::unique_ptr<Item>& item : items)
-	{
-		if (item->getName() == name)
-		{
-			return true;
-		}
-	}
-	return false;
+	// any_of devolve true se a lambda der true para algum item
+	return std::any_of(items.begin(), items.end(),
+		[&](const std::unique_ptr<Item>& item) { return item->getName() == name; });
 }
 
 // Procura no inventário uma chave com esse id. Só as KeyItem têm id, então os outros itens são ignorados.
 // Devolve nullptr se não houver.
 const KeyItem* Inventory::findKey(const std::string& keyId) const
 {
-	for (const std::unique_ptr<Item>& item : items)
-	{
-		// dynamic_cast devolve nullptr quando o item não é uma KeyItem
-		const KeyItem* key = dynamic_cast<const KeyItem*>(item.get());
-		if (key != nullptr && key->getKeyId() == keyId)
+	// dynamic_cast devolve nullptr quando o item não é uma KeyItem
+	auto achado = std::find_if(items.begin(), items.end(),
+		[&](const std::unique_ptr<Item>& item)
 		{
-			return key;
-		}
+			const KeyItem* key = dynamic_cast<const KeyItem*>(item.get());
+			return key != nullptr && key->getKeyId() == keyId;
+		});
+	if (achado == items.end())
+	{
+		return nullptr;
 	}
-	return nullptr;
+	return static_cast<const KeyItem*>(achado->get());
 }
 
 // Consome uma unidade da chave com esse id. Devolve false se não houver.
@@ -111,35 +98,37 @@ bool Inventory::removeKey(const std::string& keyId)
 // Devolve nullptr se não houver.
 const AmmoItem* Inventory::findAmmo(AmmoType type) const
 {
-	for (const std::unique_ptr<Item>& item : items)
-	{
-		// dynamic_cast devolve nullptr quando o item não é uma AmmoItem
-		const AmmoItem* ammo = dynamic_cast<const AmmoItem*>(item.get());
-		if (ammo != nullptr && ammo->getType() == type)
+	// dynamic_cast devolve nullptr quando o item não é uma AmmoItem
+	auto achado = std::find_if(items.begin(), items.end(),
+		[&](const std::unique_ptr<Item>& item)
 		{
-			return ammo;
-		}
+			const AmmoItem* ammo = dynamic_cast<const AmmoItem*>(item.get());
+			return ammo != nullptr && ammo->getType() == type;
+		});
+	if (achado == items.end())
+	{
+		return nullptr;
 	}
-	return nullptr;
+	return static_cast<const AmmoItem*>(achado->get());
 }
 
 // Tira n unidades do item com esse nome (para a munição, n é o número de balas).
 // Se a quantidade chega a zero, a vaga é liberada. Devolve false se não houver o item
 bool Inventory::removeAmount(std::string name, int n)
 {
-	for (std::size_t i = 0; i < items.size(); i++)
+	auto achado = std::find_if(items.begin(), items.end(),
+		[&](const std::unique_ptr<Item>& item) { return item->getName() == name; });
+	if (achado == items.end())
 	{
-		if (items[i]->getName() == name)
-		{
-			items[i]->removeAmount(n);
-			if (items[i]->getAmount() <= 0)
-			{
-				items.erase(items.begin() + i);
-			}
-			return true;
-		}
+		return false;
 	}
-	return false;
+
+	(*achado)->removeAmount(n);
+	if ((*achado)->getAmount() <= 0)
+	{
+		items.erase(achado);
+	}
+	return true;
 }
 
 // Usa o item com esse nome: o próprio item decide o efeito e escreve em message o que aconteceu.
@@ -147,19 +136,18 @@ bool Inventory::removeAmount(std::string name, int n)
 // Devolve true se o item foi gasto
 bool Inventory::useItem(std::string name, Player& player, std::string& message)
 {
-	for (std::size_t i = 0; i < items.size(); i++)
+	auto achado = std::find_if(items.begin(), items.end(),
+		[&](const std::unique_ptr<Item>& item) { return item->getName() == name; });
+	if (achado == items.end())
 	{
-		if (items[i]->getName() == name)
-		{
-			bool gasto = items[i]->use(player, message);
-			if (gasto)
-			{
-				removeItem(name);
-			}
-			return gasto;
-		}
+		message = "Voce não tem " + name;
+		return false;
 	}
 
-	message = "Voce não tem " + name;
-	return false;
+	bool gasto = (*achado)->use(player, message);
+	if (gasto)
+	{
+		removeItem(name);
+	}
+	return gasto;
 }
